@@ -1,0 +1,9 @@
+* ATAC modules
+scmodule code adapted for ATAC-seq, multiomics, and peak-gene linking
+
+** parameters and workflow
+
+** to clone
+#+BEGIN_SRC bash
+git clone git@github.com:KellisLab/atac_module.git
+#+END_SRC

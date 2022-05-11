@@ -1,0 +1,25 @@
+### Anaconda environment for atac modules
+### To install,
+###    conda env create --file=atac_module.yml
+
+name: atac_module
+
+channels:
+  - conda-forge
+  - bioconda
+  - anaconda
+dependencies:
+  - numpy
+  - anndata
+  - pandas
+  - python-igraph
+  - matplotlib
+  - pyranges
+  - seaborn
+  - tqdm
+  - scikit-learn
+  - leidenalg
+  - cython
+  - python-infomap
+  - umap-learn
+  - adjusttext
