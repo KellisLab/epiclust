@@ -11,3 +11,9 @@ so that the modules can be calculated without loading the data matrix into memor
 #+BEGIN_SRC bash
 git clone git@github.com:KellisLab/atac_module.git
 #+END_SRC
+** multiprocessing strategy
+for each power, run ModuleMatrix.
+Launch Process with Queue.
+This queue appends data to H5 file
+Launch process pool.
+This process pool fills Z-score matrix and sends to queue

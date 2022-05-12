@@ -24,4 +24,4 @@ def build_spline(bin_assign, bin_edges, m_data, m_count, k=2, a_min=-np.inf, a_m
                 data = data[I1x,:]
                 data = data[:,I1y]
                 return np.clip(data + total_mean, a_min=a_min, a_max=a_max)
-        return build_spline_grid
+        return spl
