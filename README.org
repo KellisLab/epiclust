@@ -2,7 +2,11 @@
 scmodule code adapted for ATAC-seq, multiomics, and peak-gene linking
 
 ** parameters and workflow
+Make sure your data is in an AnnData (H5AD) format with
+1. PCA ([[https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.pca.html][scanpy.pp.pca]]), preferably on top of logTF-logIDF ([[https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html][sklearn.feature_extraction.text.TfidfTransformer(sublinear_tf=True)]])
+2. QC ([[https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.calculate_qc_metrics.html][scanpy.pp.calculate_qc_metrics]])
 
+so that the modules can be calculated without loading the data matrix into memory.
 ** to clone
 #+BEGIN_SRC bash
 git clone git@github.com:KellisLab/atac_module.git
