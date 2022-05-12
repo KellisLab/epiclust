@@ -1,6 +1,24 @@
 from .perbin import create_bins_quantile, calc_perbin_stats
 from .spline import build_spline
 from .zmatrix import fill_matrix #, fill_corrected_matrix
+
+def extract_pca(adata, transpose=False, npc=0):
+        """we know that the S component is always positive
+        so it can be recontructed from s^2/(DoF)"""
+        Us = adata.obsm["X_pca"]
+        s = adata.uns["pca"]["variance"]
+        s = np.sqrt(s * (adata.shape[0] - 1))
+        U = Us @ np.diag(1/s)
+        VT = adata.varm["PCs"].T
+        if npc > 0 and npc <= len(s):
+                U = U[:,range(npc)]
+                s = s[range(npc)]
+                VT = VT[range(npc),:]
+        if transpose:
+                return VT.T, s, U.T
+        else:
+                return U, s, VT
+
 class ModuleMatrix:
         def __init__(self, adata, nbins=50, margin="n_cells_by_counts", npc=0):
                 self.U, self.s, self.VT = extract_pca(adata, npc=npc)
