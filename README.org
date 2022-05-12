@@ -1,5 +1,5 @@
 * ATAC modules
-scmodule code adapted for ATAC-seq, multiomics, and peak-gene linking
+scmodule code [[https://github.com/KellisLab/scmodule][adapted]] for ATAC-seq, multiomics, and peak-gene linking
 
 ** parameters and workflow
 Make sure your data is in an AnnData (H5AD) format with

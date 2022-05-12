@@ -21,5 +21,6 @@ setuptools.setup(name="atac_module",
                          "infomap"
                  ],
                  packages=setuptools.find_packages(),
+                 test_suite="test",
                  ext_modules=cythonize("atac_module/utils.pyx")
 )
