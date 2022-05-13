@@ -4,7 +4,7 @@ from functools import partial
 import multiprocessing
 from .utils import cov_to_cor_z_along
 
-def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer):
+def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=correct):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         out = []
@@ -22,6 +22,8 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer):
                                        np.median(margin[col_indices])) for sname, spl in spline_table.items()}
                 cor_mat = cor_mat - s_tables["mean"]
                 cor_mat = cor_mat / s_tables["std"]
+                if correct is not None:
+                        cor_mat = correct(cor_mat, row_indices, col_indices)
                 del s_tables
                 cor_mat[np.equal.outer(row_indices, col_indices)] = -np.inf
                 grow, gcol = np.where(cor_mat >= z)
@@ -69,7 +71,7 @@ def write_from_queue(writer, queue, n_items):
         t.close()
         return 0
 
-def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, batch_size=1000):
+def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, batch_size=1000, correct=None):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         uniq = np.unique(bin_assign)
@@ -84,7 +86,7 @@ def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, cor
                 wproc.start()
                 func = partial(fill_matrix_bin, margin=margin, X_adj=X_adj,
                                bin_assign=bin_assign, spline_table=spline_table,
-                               z=z, queue=queue, batch_size=batch_size)
+                               z=z, queue=queue, batch_size=batch_size, correct=correct)
                 with multiprocessing.Pool() as pool:
                         out = pool.map(func, order)
                 wproc.join()
