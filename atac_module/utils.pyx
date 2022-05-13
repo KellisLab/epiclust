@@ -2,7 +2,7 @@
 import numpy as np
 cimport numpy as np
 cimport cython
-
+import scipy.sparse
 ctypedef fused DTYPE_t:
     float
     double
@@ -58,14 +58,47 @@ def nearPD(np.ndarray[DTYPE_t, ndim=2] A):
                 A3 += I * (-min_eig * k**2 + spacing)
                 k += 1
         return A3
-# def outer_correlation_svd():
-#         return 0
 
-# def outer_correlation(np.ndarray[DTYPE_t, ndim=2] A,
-#                       np.ndarray[DTYPE_t, ndim=2] B,
-#                       Py_ssize_t batch_size=1000):
-#         assert A.shape[1] == B.shape[1]
+def _outer_cor(A, B):
+        top = A @ B.T - A.shape[1] * np.multiply.outer(A.mean(1), B.mean(1))
+        bottom = A.shape[1] * np.multiply.outer(np.std(A, axis=1),
+                                                np.std(B, axis=1))
+        quot = np.divide(top, bottom, out=np.zeros_like(top), where=bottom != 0)
+        return np.clip(quot, a_min=-1, a_max=1)
 
-# def nearPD(mat):
+def outer_correlation_svd(U, s, VT, B,
+                          Py_ssize_t batch_size=1000):
+        assert VT.shape[1] == B.shape[1]
+        out = np.zeros((U.shape[0], B.shape[0]))
+        for a_begin in range(0, U.shape[0], batch_size):
+                a_end = min(a_begin + batch_size, U.shape[0])
+                Ma = U[a_begin:a_end, :] @ np.diag(s) @ VT
+                Ma = np.asarray(Ma)
+                for b_begin in range(0, B.shape[0], batch_size):
+                        b_end = min(b_begin + batch_size, B.shape[0])
+                        Mb = B[b_begin:b_end, :]
+                        if(scipy.sparse.issparse(Mb)):
+                                Mb = Mb.todense()
+                        Mb = np.asarray(Mb)
+                        out[a_begin:a_end, b_begin:b_end] = _outer_cor(Ma, Mb)
+        return out
 
-# def adjust_coo(mat, row_indices, col_indices, batch_size=5000, lfcor, rfcor, ainv):
+def outer_correlation(np.ndarray[DTYPE_t, ndim=2] A,
+                      np.ndarray[DTYPE_t, ndim=2] B,
+                      Py_ssize_t batch_size=1000):
+        assert A.shape[1] == B.shape[1]
+        out = np.zeros((A.shape[0], B.shape[0]))
+        for a_begin in range(0, A.shape[0], batch_size):
+                a_end = min(a_begin + batch_size, A.shape[0])
+                Ma = A[a_begin:a_end, :]
+                if scipy.sparse.issparse(Ma):
+                        Ma = Ma.todense()
+                Ma = np.asarray(Ma)
+                for b_begin in range(0, B.shape[0], batch_size):
+                        b_end = min(b_begin + batch_size, B.shape[0])
+                        Mb = B[b_begin:b_end, :]
+                        if scipy.sparse.issparse(Mb):
+                                Mb = Mb.todense()
+                        Mb = np.asarray(Mb)
+                        out[a_begin:a_end, b_begin:b_end] = _outer_cor(Ma, Mb)
+        return out

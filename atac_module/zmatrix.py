@@ -32,7 +32,7 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer):
         return 0
 
 
-def fill_matrix_bin(idx_list, margin, X_adj, bin_assign, spline_table, z, queue, batch_size=10000):
+def fill_matrix_bin(idx_list, margin, X_adj, bin_assign, spline_table, z, queue, batch_size=10000, correct=None):
         uniq = np.unique(bin_assign)
         i, j = idx_list
         row_indices = np.where(uniq[i] == bin_assign)[0]
@@ -44,6 +44,8 @@ def fill_matrix_bin(idx_list, margin, X_adj, bin_assign, spline_table, z, queue,
                     for sname, spl in spline_table.items()}
         cor_mat = cor_mat - s_tables["mean"]
         cor_mat = cor_mat / s_tables["std"]
+        if correct is not None:
+                cor_mat = correct(cor_mat, row_indices, col_indices)
         cor_mat[np.equal.outer(row_indices, col_indices)] = -np.inf
         grow, gcol = np.where(cor_mat >= z)
         for begin in range(0, len(grow), batch_size):
@@ -67,7 +69,7 @@ def write_from_queue(writer, queue, n_items):
         t.close()
         return 0
 
-def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, batch_size=1000):
+def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, batch_size=1000):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         uniq = np.unique(bin_assign)
