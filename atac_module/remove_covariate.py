@@ -28,6 +28,7 @@ def get_covariate_transformer(adata, batch_remove=[], batch_keep=[], batch_size=
         br = PCA(n_components=n_comp).fit_transform(br)
         RR = outer_correlation(br.T, br.T, batch_size=batch_size)
         U, s, VT = extract_pca(adata, transpose=True)
+        print("Correlating removal-batches with data")
         PR = outer_correlation_svd(U, s, VT, br.T, batch_size=batch_size)
         if len(batch_keep) > 0:
                 #### remove "keep" covariates from "remove" covariates by doing partial correlations
@@ -43,6 +44,7 @@ def get_covariate_transformer(adata, batch_remove=[], batch_keep=[], batch_size=
                 KK = outer_correlation(bk.T, bk.T, batch_size=batch_size)
                 pc = PartialCor(RK, KK, RK.T, batch_size=batch_size)
                 RR = pc(RR)
+                print("Correlating keep-batches with data")
                 PK = outer_correlation_svd(U, s, VT, bk.T, batch_size=batch_size)
                 pc = PartialCor(PK, KK, RK.T, batch_size=batch_size)
                 PR = pc(PR)

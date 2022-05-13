@@ -1,16 +1,15 @@
 from .perbin import create_bins_quantile, calc_perbin_stats
 from .spline import Spline
 from .zmatrix import fill_matrix, fill_matrix_parallel
-from .h5writer import H5Writer
 import numpy as np
 def extract_pca(adata, transpose=False, npc=0):
         """we know that the S component is always positive
         so it can be recontructed from s^2/(DoF)"""
-        Us = adata.obsm["X_pca"]
-        s = adata.uns["pca"]["variance"]
+        Us = adata.obsm["X_pca"].astype(np.float64)
+        s = adata.uns["pca"]["variance"].astype(np.float64)
         s = np.sqrt(s * (adata.shape[0] - 1))
         U = Us @ np.diag(1/s)
-        VT = adata.varm["PCs"].T
+        VT = adata.varm["PCs"].T.astype(np.float64)
         if npc > 0 and npc <= len(s):
                 U = U[:, range(npc)]
                 s = s[range(npc)]
@@ -29,6 +28,7 @@ class ModuleMatrix:
                 self.varnames = adata.var.index.values
                 self.bin_assign, self.bin_edges = create_bins_quantile(self.margin, nbins=nbins)
         def _build_splines(self, X_adj, min_std, k, **kwargs):
+                print("Building splines")
                 cps = calc_perbin_stats(X_adj, self.bin_assign, **kwargs)
                 S = {}
                 S["std"] = Spline(self.bin_assign, self.bin_edges,
@@ -43,8 +43,8 @@ class ModuleMatrix:
                 S = self._build_splines(X_adj, min_std=min_std, k=k, z=sample_z,
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample)
-                w = H5Writer(output, names=self.varnames)
+                writer={"output": output, "names": self.varnames}
                 return fill_matrix_parallel(margin=self.margin, X_adj=X_adj,
                                             bin_assign=self.bin_assign,
                                             spline_table=S, z=cutoff_z,
-                                            writer=w, correct=correct)
+                                            writer=writer, correct=correct)

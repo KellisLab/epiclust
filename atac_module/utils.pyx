@@ -3,6 +3,8 @@ import numpy as np
 cimport numpy as np
 cimport cython
 import scipy.sparse
+from tqdm.auto import tqdm
+
 ctypedef fused DTYPE_t:
     float
     double
@@ -59,6 +61,8 @@ def nearPD(np.ndarray[DTYPE_t, ndim=2] A):
                 k += 1
         return A3
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def _outer_cor(A, B):
         top = A @ B.T - A.shape[1] * np.multiply.outer(A.mean(1), B.mean(1))
         bottom = A.shape[1] * np.multiply.outer(np.std(A, axis=1),
@@ -66,10 +70,16 @@ def _outer_cor(A, B):
         quot = np.divide(top, bottom, out=np.zeros_like(top), where=bottom != 0)
         return np.clip(quot, a_min=-1, a_max=1)
 
-def outer_correlation_svd(U, s, VT, B,
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def outer_correlation_svd(np.ndarray[DTYPE_t, ndim=2] U,
+                          np.ndarray[DTYPE_t, ndim=1] s,
+                          np.ndarray[DTYPE_t, ndim=2] VT,
+                          np.ndarray[DTYPE_t, ndim=2] B,
                           Py_ssize_t batch_size=1000):
         assert VT.shape[1] == B.shape[1]
         out = np.zeros((U.shape[0], B.shape[0]))
+        t = tqdm(total=np.prod(out.shape))
         for a_begin in range(0, U.shape[0], batch_size):
                 a_end = min(a_begin + batch_size, U.shape[0])
                 Ma = U[a_begin:a_end, :] @ np.diag(s) @ VT
@@ -81,6 +91,8 @@ def outer_correlation_svd(U, s, VT, B,
                                 Mb = Mb.todense()
                         Mb = np.asarray(Mb)
                         out[a_begin:a_end, b_begin:b_end] = _outer_cor(Ma, Mb)
+                        t.update((a_end-a_begin)*(b_end-b_begin))
+        t.close()
         return out
 
 def outer_correlation(np.ndarray[DTYPE_t, ndim=2] A,

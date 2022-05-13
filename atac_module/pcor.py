@@ -7,7 +7,7 @@ from .utils import nearPD, isPD
 def adjust_partial_cor(mat, L, R, inv):
         """formula: sub = L INV R^T
         f"""
-        sub = L @ inv @ R.T
+        sub = L @ inv @ R
         denom_row = np.einsum("ij,jk,ki->i", L, inv, L.T)
         denom_col = np.einsum("ij,jk,ki->i", R.T, inv, R)
         denom_square = np.multiply.outer(1-denom_row, 1-denom_col)

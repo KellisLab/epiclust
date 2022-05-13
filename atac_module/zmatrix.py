@@ -3,8 +3,9 @@ from tqdm.auto import tqdm
 from functools import partial
 import multiprocessing
 from .utils import cov_to_cor_z_along
+from .h5writer import H5Writer
 
-def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=correct):
+def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         out = []
@@ -23,7 +24,9 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=corr
                 cor_mat = cor_mat - s_tables["mean"]
                 cor_mat = cor_mat / s_tables["std"]
                 if correct is not None:
-                        cor_mat = correct(cor_mat, row_indices, col_indices)
+                        new_cor_mat = correct(cor_mat, row_indices, col_indices)
+                        ### tone down outliers from partial correlation
+                        cor_mat = np.mean((cor_mat, new_cor_mat), axis=0)
                 del s_tables
                 cor_mat[np.equal.outer(row_indices, col_indices)] = -np.inf
                 grow, gcol = np.where(cor_mat >= z)
@@ -60,6 +63,8 @@ def fill_matrix_bin(idx_list, margin, X_adj, bin_assign, spline_table, z, queue,
 
 def write_from_queue(writer, queue, n_items):
         n_done = 0
+        writer = H5Writer(filename=writer["output"], names=writer["names"])
+        print("Filling matrix")
         t = tqdm(total=n_items)
         while n_done < n_items:
                 item = queue.get()
@@ -71,7 +76,7 @@ def write_from_queue(writer, queue, n_items):
         t.close()
         return 0
 
-def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, batch_size=1000, correct=None):
+def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, batch_size=1000):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         uniq = np.unique(bin_assign)
