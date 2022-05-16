@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import setuptools
+from distutils.extension import Extension
 from Cython.Build import cythonize ### Cython must be installed
 import numpy
+
+extensions = [Extension("atac_module.utils", ["atac_module/utils.pyx"],
+                        extra_compile_args=["-O3"])]
 setuptools.setup(name="atac_module",
                  install_requires=[
                          "numpy",
+                         "cython",
                          "pandas",
                          "scipy",
                          "matplotlib",
@@ -20,8 +25,8 @@ setuptools.setup(name="atac_module",
                          "sklearn",
                          "infomap"
                  ],
-                 packages=setuptools.find_packages(),
+                 packages=setuptools.find_packages("."),
                  test_suite="test",
-                 include_dirs=[numpy.get_include()],
-                 ext_modules=cythonize("atac_module/utils.pyx")
-)
+                 scripts=["scripts/atac_module.py"],
+                 include_dirs=[".", numpy.get_include()],
+                 ext_modules=cythonize(extensions))

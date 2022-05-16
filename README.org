@@ -7,16 +7,11 @@ Make sure your data is in an AnnData (H5AD) format with
 2. QC ([[https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.calculate_qc_metrics.html][scanpy.pp.calculate_qc_metrics]])
 
 so that the modules can be calculated without loading the data matrix into memory.
-** to clone
+** to install
+This puts the script [[scripts/atac_module.py][atac_module.py]] in pip's bin path, as well as includes the library
 #+BEGIN_SRC bash
 git clone git@github.com:KellisLab/atac_module.git
 cd atac_module
-python3 setup.py build_ext
+python3 setup.py build
 pip install .
 #+END_SRC
-** multiprocessing strategy
-for each power, run ModuleMatrix.
-Launch Process with Queue.
-This queue appends data to H5 file
-Launch process pool.
-This process pool fills Z-score matrix and sends to queue
