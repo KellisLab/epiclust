@@ -2,6 +2,7 @@ from .perbin import create_bins_quantile, calc_perbin_stats
 from .spline import Spline
 from .zmatrix import fill_matrix, fill_matrix_parallel
 import numpy as np
+import os
 def extract_pca(adata, transpose=False, npc=0):
         """we know that the S component is always positive
         so it can be recontructed from s^2/(DoF)"""
@@ -38,13 +39,14 @@ class ModuleMatrix:
                 return S
         def build(self, power=0, correct=None, cutoff_z=4, sample_z=2,
                   margin_of_error=0.05, n_bins_sample=2, k=2, min_std=0.001,
-                  output="output.h5"):
+                  nproc=os.cpu_count(), output="output.h5"):
                 X_adj = self.VT.T @ np.diag(self.s**power)
                 S = self._build_splines(X_adj, min_std=min_std, k=k, z=sample_z,
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample)
-                writer={"output": output, "names": self.varnames}
+                writer = {"output": output, "names": self.varnames}
                 return fill_matrix_parallel(margin=self.margin, X_adj=X_adj,
                                             bin_assign=self.bin_assign,
                                             spline_table=S, z=cutoff_z,
+                                            nproc=nproc,
                                             writer=writer, correct=correct)

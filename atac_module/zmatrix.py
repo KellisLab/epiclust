@@ -76,7 +76,7 @@ def write_from_queue(writer, queue, n_items):
         t.close()
         return 0
 
-def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, batch_size=1000):
+def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, batch_size=1000, nproc=64):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         uniq = np.unique(bin_assign)
@@ -92,7 +92,7 @@ def fill_matrix_parallel(margin, X_adj, bin_assign, spline_table, z, writer, cor
                 func = partial(fill_matrix_bin, margin=margin, X_adj=X_adj,
                                bin_assign=bin_assign, spline_table=spline_table,
                                z=z, queue=queue, batch_size=batch_size, correct=correct)
-                with multiprocessing.Pool() as pool:
+                with multiprocessing.Pool(nproc) as pool:
                         out = pool.map(func, order)
                 wproc.join()
         return 0
