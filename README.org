@@ -8,7 +8,9 @@ Make sure your data is in an AnnData (H5AD) format with
 
 so that the modules can be calculated without loading the data matrix into memory.
 ** to install
-This puts the script [[scripts/atac_module.py][atac_module.py]] in pip's bin path, as well as includes the library
+You may need to create a CONDA environment as specified in [[atac_module.yml]].
+
+After dependencies are met, this sequence of commands puts the script [[scripts/atac_module.py][atac_module.py]] in pip's bin path, as well as installs the library.
 #+BEGIN_SRC bash
 git clone git@github.com:KellisLab/atac_module.git
 cd atac_module
