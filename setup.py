@@ -27,6 +27,6 @@ setuptools.setup(name="atac_module",
                  ],
                  packages=setuptools.find_packages("."),
                  test_suite="test",
-                 scripts=["scripts/atac_module.py"],
+                 scripts=["scripts/atac_module_compute_cor.py"],
                  include_dirs=[".", numpy.get_include()],
                  ext_modules=cythonize(extensions))

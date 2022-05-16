@@ -10,9 +10,10 @@ def run(input=None, output=None,
         import anndata
         import atac_module as am
         adata = anndata.read(input, backed="r")
-        correct = am.get_covariate_transformer(adata,
-                                               batch_remove=batch_remove,
-                                               batch_keep=batch_keep)
+        if batch_remove is not None:
+                correct = am.get_covariate_transformer(adata,
+                                                       batch_remove=batch_remove,
+                                                       batch_keep=batch_keep)
         mm = am.ModuleMatrix(adata, nbins=nbin,
                              margin=margin, npc=npc)
         del adata
