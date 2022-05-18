@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
 import argparse
+import dask
+dask.config.set(scheduler='processes')  # overwrite default with multiprocessing scheduler
 
 def run(input=None, output=None,
         nbin=50, npc=0, margin="n_cells_by_counts",
@@ -42,7 +44,7 @@ if __name__ == "__main__":
                         help="Batch-level effects (in AnnData .obs) that you want to keep for correlation that would be removed if --batch-remove options are removed")
         ap.add_argument("--nproc", default=os.cpu_count(), type=int,
                         help="Number of worker pool processes to use. Note that a writer process is separately launched outside of this number")
-        ap.add_argument("--margin-of-error", type=float, default=0.05,
+        ap.add_argument("--margin-of-error", type=float, default=0.01,
                         help="Margin of error used to calculate number of samples necessary for mean & std calculation")
         ap.add_argument("--npc", default=0, type=int,
                         help="Number of components to use")

@@ -4,7 +4,8 @@ from functools import partial
 import multiprocessing
 from .utils import cov_to_cor_z_along
 from .h5writer import H5Writer
-
+import h5py
+import pandas as pd
 import dask
 import dask.dataframe as dd
 
@@ -45,9 +46,10 @@ def finalize(mat, row, col, cutoff):
                 R = row[i]
                 C = col[j]
                 ind = R != C
+                data = mat[i[ind], j[ind]]
                 return pd.DataFrame({"row": R[ind],
                                      "col": C[ind],
-                                     "data": mat[R[ind], C[ind]]})
+                                     "data": data})
         else:
                 return pd.DataFrame({"row": [],
                                      "col": [],
@@ -59,7 +61,7 @@ def fill_matrix_dask(margin, X_adj, bin_assign, spline_table, z, writer, correct
         out = []
         uniq = np.unique(bin_assign)
         nbin = len(uniq)
-        order = []
+        res = []
         for i in range(nbin):
                 for j in range(i, nbin):
                         row_indices = np.where(uniq[i] == bin_assign)[0]
@@ -69,12 +71,12 @@ def fill_matrix_dask(margin, X_adj, bin_assign, spline_table, z, writer, correct
                         s_std = dask.delayed(spline_table["std"])(row_indices, col_indices)
                         cor_mat = (cor_mat - s_mean) / s_std
                         if correct is not None:
-                                new_cor_mat = dask.delayed(correct)(cor_mat, row_indices, col_indices))
+                                new_cor_mat = dask.delayed(correct)(cor_mat, row_indices, col_indices)
                                 ### tone down outliers from partial correlation
                         else:
                                 new_cor_mat = cor_mat
-                        done = dask.delayed(finalize)(new_cor_mat, row_indices, col_indices, cutoff)
+                        done = dask.delayed(finalize)(new_cor_mat, row_indices, col_indices, z)
                         res.append(done)
-        dd.from_delayed(res).write_hdf(writer["output"], "matrix")
+        dd.from_delayed(res).to_hdf(writer["output"], "matrix")
         with h5py.File(writer["output"], "r+") as W:
                 W["names"] = writer["names"]

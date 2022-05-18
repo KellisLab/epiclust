@@ -1,6 +1,6 @@
 from .perbin import create_bins_quantile, calc_perbin_stats
 from .spline import Spline
-from .zmatrix import fill_matrix, fill_matrix_parallel
+from .zmatrix import fill_matrix_dask
 import numpy as np
 import os
 def extract_pca(adata, transpose=False, npc=0):
@@ -38,7 +38,7 @@ class ModuleMatrix:
                                    cps["mean"], cps["counts"], k=k)
                 return S
         def build(self, power=0, correct=None, cutoff_z=4, sample_z=2,
-                  margin_of_error=0.05, n_bins_sample=2, k=2, min_std=0.001,
+                  margin_of_error=0.01, n_bins_sample=2, k=2, min_std=0.001,
                   nproc=os.cpu_count(), output="output.h5"):
                 X_adj = self.VT.T @ np.diag(self.s**power)
                 X_adj = X_adj / np.linalg.norm(X_adj, axis=1, ord=2)[:, None]
@@ -49,5 +49,5 @@ class ModuleMatrix:
                 return fill_matrix_dask(margin=self.margin, X_adj=X_adj,
                                         bin_assign=self.bin_assign,
                                         spline_table=S, z=cutoff_z,
-                                        writer,
+                                        writer=writer,
                                         correct=correct)
