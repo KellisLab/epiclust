@@ -46,7 +46,7 @@ class ModuleMatrix:
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample)
                 writer = {"output": output, "names": self.varnames}
-                return fill_matrix_parallel(margin=self.margin, X_adj=X_adj,
+                return fill_matrix(margin=self.margin, X_adj=X_adj,
                                             bin_assign=self.bin_assign,
                                             spline_table=S, z=cutoff_z,
                                             nproc=nproc,
