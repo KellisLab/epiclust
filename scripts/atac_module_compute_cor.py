@@ -14,6 +14,8 @@ def run(input=None, output=None,
                 correct = am.get_covariate_transformer(adata,
                                                        batch_remove=batch_remove,
                                                        batch_keep=batch_keep)
+        else:
+                correct = None
         mm = am.ModuleMatrix(adata, nbins=nbin,
                              margin=margin, npc=npc)
         del adata
