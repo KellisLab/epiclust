@@ -11,6 +11,8 @@ setuptools.setup(name="atac_module",
                  install_requires=[
                          "numpy",
                          "cython",
+                         "dask",
+                         "pytables",
                          "pandas",
                          "scipy",
                          "matplotlib",

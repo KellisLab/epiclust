@@ -33,7 +33,6 @@ def get_covariate_transformer(adata, batch_remove=[], batch_keep=[], batch_size=
         if len(batch_keep) > 0:
                 #### remove "keep" covariates from "remove" covariates by doing partial correlations
                 #### on the two matrices required by the "remove" covariance matrix
-                print(batch_keep)
                 bk = pd.get_dummies(adata.obs[batch_keep]).values
                 bk = bk[:, np.std(bk, axis=0) > 0]
                 pca = PCA(n_components=bk.shape[1]).fit(bk)

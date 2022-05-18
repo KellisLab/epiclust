@@ -41,6 +41,7 @@ class ModuleMatrix:
                   margin_of_error=0.05, n_bins_sample=2, k=2, min_std=0.001,
                   nproc=os.cpu_count(), output="output.h5"):
                 X_adj = self.VT.T @ np.diag(self.s**power)
+                X_adj = X_adj / np.linalg.norm(X_adj, axis=1, ord=2)[:, None]
                 S = self._build_splines(X_adj, min_std=min_std, k=k, z=sample_z,
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample)
