@@ -29,12 +29,14 @@ def cov_to_cor_z_along(np.ndarray[DTYPE_t, ndim=2] X_adj,
 @cython.wraparound(False)
 def calc_stats_per_bin(np.ndarray[DTYPE_t, ndim=2] X_adj,
                        np.ndarray[Py_ssize_t, ndim=1] row_indices,
-                       np.ndarray[Py_ssize_t, ndim=1] col_indices):
+                       np.ndarray[Py_ssize_t, ndim=1] col_indices, out_row=0, out_col=0):
         data = cov_to_cor_z_along(X_adj, row_indices, col_indices)
         data = data[~np.equal.outer(row_indices, col_indices)]
         return {"counts": len(data),
                 "mean": np.mean(data),
-                "std": np.std(data)}
+                "std": np.std(data),
+                "row": out_row,
+                "col": out_col}
 
 def isPD(X):
         try:
