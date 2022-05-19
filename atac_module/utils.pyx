@@ -29,7 +29,8 @@ def cov_to_cor_z_along(np.ndarray[DTYPE_t, ndim=2] X_adj,
 @cython.wraparound(False)
 def calc_stats_per_bin(np.ndarray[DTYPE_t, ndim=2] X_adj,
                        np.ndarray[Py_ssize_t, ndim=1] row_indices,
-                       np.ndarray[Py_ssize_t, ndim=1] col_indices, out_row=0, out_col=0):
+                       np.ndarray[Py_ssize_t, ndim=1] col_indices,
+                       int out_row=0, int out_col=0):
         data = cov_to_cor_z_along(X_adj, row_indices, col_indices)
         data = data[~np.equal.outer(row_indices, col_indices)]
         return {"counts": len(data),
@@ -79,6 +80,7 @@ def outer_correlation_svd(np.ndarray[DTYPE_t, ndim=2] U,
                           np.ndarray[DTYPE_t, ndim=2] VT,
                           np.ndarray[DTYPE_t, ndim=2] B,
                           Py_ssize_t batch_size=1000):
+        ### TODO: dask.delayed
         assert VT.shape[1] == B.shape[1]
         out = np.zeros((U.shape[0], B.shape[0]))
         t = tqdm(total=np.prod(out.shape))

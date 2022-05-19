@@ -12,6 +12,8 @@ dependencies:
   - numpy
   - anndata
   - pandas
+  - sparse
+  - dask
   - python-igraph
   - matplotlib
   - pyranges

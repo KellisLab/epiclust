@@ -3,6 +3,8 @@ from .spline import Spline
 from .zmatrix import fill_matrix_dask
 import numpy as np
 import os
+from dask.diagnostics import ProgressBar
+
 def extract_pca(adata, transpose=False, npc=0):
         """we know that the S component is always positive
         so it can be recontructed from s^2/(DoF)"""
@@ -30,12 +32,13 @@ class ModuleMatrix:
                 self.bin_assign, self.bin_edges = create_bins_quantile(self.margin, nbins=nbins)
         def _build_splines(self, X_adj, min_std, k, **kwargs):
                 print("Building splines")
-                cps = calc_perbin_stats(X_adj, self.bin_assign, **kwargs)
-                S = {}
-                S["std"] = Spline(self.bin_assign, self.bin_edges,
-                                  cps["std"], cps["counts"], k=k, a_min=min_std)
-                S["mean"] = Spline(self.bin_assign, self.bin_edges,
-                                   cps["mean"], cps["counts"], k=k)
+                with ProgressBar(minimum=1.0):
+                        cps = calc_perbin_stats(X_adj, self.bin_assign, **kwargs)
+                        S = {}
+                        S["std"] = Spline(self.bin_assign, self.bin_edges,
+                                          cps["std"], cps["counts"], k=k, a_min=min_std)
+                        S["mean"] = Spline(self.bin_assign, self.bin_edges,
+                                           cps["mean"], cps["counts"], k=k)
                 return S
         def build(self, power=0, correct=None, cutoff_z=4, sample_z=2,
                   margin_of_error=0.01, n_bins_sample=2, k=2, min_std=0.001,
@@ -46,8 +49,11 @@ class ModuleMatrix:
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample)
                 writer = {"output": output, "names": self.varnames}
-                return fill_matrix_dask(margin=self.margin, X_adj=X_adj,
-                                        bin_assign=self.bin_assign,
-                                        spline_table=S, z=cutoff_z,
-                                        writer=writer,
-                                        correct=correct)
+                print("Computing correlations")
+                with ProgressBar(minimum=1.0):
+                        out = fill_matrix_dask(margin=self.margin, X_adj=X_adj,
+                                                bin_assign=self.bin_assign,
+                                                spline_table=S, z=cutoff_z,
+                                                writer=writer,
+                                                correct=correct)
+                return out

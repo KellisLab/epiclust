@@ -21,9 +21,10 @@ def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=
                         ss = int(np.ceil(ss_numer / (1 + ss_numer/ss_n)))
                         row_indices = np.random.choice(row_indices, min(len(row_indices), int(ss)), replace=False)
                         col_indices = np.random.choice(col_indices, min(len(col_indices), int(ss)), replace=False)
-                        ret = dask.delayed(calc_stats_per_bin)(rep, row_indices, col_indices, out_row=i, out_col=j)
+                        ret = calc_stats_per_bin(rep, row_indices, col_indices, out_row=i, out_col=j)
                         out.append(ret)
-        for x in dask.compute(out)[0]:
+        # for x in dask.compute(out)[0]:
+        for x in out:
                 counts[x["row"], x["col"]] = x["counts"]
                 means[x["row"], x["col"]] = x["mean"]
                 stds[x["row"], x["col"]] = x["std"]
