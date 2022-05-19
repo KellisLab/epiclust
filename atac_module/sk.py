@@ -7,7 +7,11 @@ import dask
 def _np_as_sparse(arr):
         return da.asarray(sparse.COO.from_scipy_sparse(scipy.sparse.diags(arr)))
 
-def sinkhorn_knopp_dask(A, rowSums, colSums, epsilon=1e-3, max_iter=1000):
+def sinkhorn_knopp_dask(A, rowSums=None, colSums=None, epsilon=1e-3, max_iter=1000):
+        if rowSums is None:
+                rowSums = A.shape[1]*np.ones(A.shape[0])
+        if colSums is None:
+                colSums=A.shape[0]*np.ones(A.shape[1])
         if scipy.sparse.issparse(A):
                 ### Use compatible sparse matrix library for dask
                 A = sparse.COO.from_scipy_sparse(A)
@@ -38,7 +42,11 @@ def sinkhorn_knopp_dask(A, rowSums, colSums, epsilon=1e-3, max_iter=1000):
                 iteration += 1
         return dask.compute(x)[0], dask.compute(y)[0]
 
-def sinkhorn_knopp(A, rowSums, colSums, epsilon=1e-5, max_iter=1000):
+def sinkhorn_knopp(A, rowSums=None, colSums=None, epsilon=1e-5, max_iter=1000):
+        if rowSums is None:
+                rowSums = A.shape[1]*np.ones(A.shape[0])
+        if colSums is None:
+                colSums=A.shape[0]*np.ones(A.shape[1])
         x = np.ones(A.shape[0])
         y = np.ones(A.shape[1])
         diff_r = scipy.sparse.diags(x).dot(A).dot(y) - rowSums
