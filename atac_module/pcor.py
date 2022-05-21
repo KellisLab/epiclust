@@ -54,4 +54,5 @@ class PartialCor:
                                 out[rbegin:rend, cbegin:cend] = adjust_partial_cor(np.tanh(np.asarray(MRC)),
                                                                                    L=L, R=R,
                                                                                    inv=self.ainv)
-                return np.arctanh(np.clip(out, a_min=-1+eps, a_max=1-eps))
+                out = np.arctanh(np.clip(out, a_min=-1+eps, a_max=1-eps))
+                return (out + mat)/2 ## average
