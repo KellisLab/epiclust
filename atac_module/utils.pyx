@@ -73,6 +73,7 @@ def _outer_cor(A, B):
         quot = np.divide(top, bottom, out=np.zeros_like(top), where=bottom != 0)
         return np.clip(quot, a_min=-1, a_max=1)
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def outer_correlation_svd(np.ndarray[DTYPE_t, ndim=2] U,

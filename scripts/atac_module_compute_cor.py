@@ -2,7 +2,9 @@
 import os
 import argparse
 import dask
-dask.config.set(scheduler='processes')  # overwrite default with multiprocessing scheduler
+from dask.distributed import Client
+
+#dask.config.set(scheduler='processes')  # overwrite default with multiprocessing scheduler
 
 def run(input=None, output=None,
         nbin=50, npc=0, margin="n_cells_by_counts",
@@ -55,4 +57,5 @@ if __name__ == "__main__":
         ap.add_argument("--min-std", default=0.001, type=float,
                         help="Minimum standard deviation such that higher correlations can be found")
         args = vars(ap.parse_args())
+        Client(memory_limit="4GB", n_workers=2, threads_per_worker=1)
         run(**args)
