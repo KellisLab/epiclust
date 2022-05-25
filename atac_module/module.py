@@ -1,9 +1,10 @@
 from .perbin import create_bins_quantile, calc_perbin_stats
 from .spline import Spline
-from .zmatrix import fill_matrix_dask
+from .zmatrix import fill_matrix_dask, fill_matrix
 import numpy as np
 import os
 from dask.diagnostics import ProgressBar
+from .h5writer import H5Writer
 
 def extract_pca(adata, transpose=False, npc=0):
         """we know that the S component is always positive
@@ -50,10 +51,11 @@ class ModuleMatrix:
                                         n_bins_sample=n_bins_sample)
                 writer = {"output": output, "names": self.varnames}
                 print("Computing correlations")
-                with ProgressBar(minimum=1.0):
-                        out = fill_matrix_dask(margin=self.margin, X_adj=X_adj,
-                                                bin_assign=self.bin_assign,
-                                                spline_table=S, z=cutoff_z,
-                                                writer=writer,
-                                                correct=correct)
+                #with ProgressBar(minimum=1.0):
+                writer = H5Writer(output, names=self.varnames)
+                out = fill_matrix(margin=self.margin, X_adj=X_adj,
+                                  bin_assign=self.bin_assign,
+                                  spline_table=S, z=cutoff_z,
+                                  writer=writer,
+                                  correct=correct)
                 return out

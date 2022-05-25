@@ -23,7 +23,7 @@ def run(input=None, output=None,
         mm = am.ModuleMatrix(adata, nbins=nbin,
                              margin=margin, npc=npc)
         del adata
-        return mm.build(power, correct=correct, cutoff_z=z, sample_z=2,
+        return mm.build(power=power, correct=correct, cutoff_z=z, sample_z=2,
                         margin_of_error=margin_of_error,
                         n_bins_sample=nbin_sample, k=spline_k,
                         min_std=min_std, nproc=nproc, output=output)

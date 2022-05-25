@@ -23,8 +23,8 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None
                 row_indices = np.where(uniq[i] == bin_assign)[0]
                 col_indices = np.where(uniq[j] == bin_assign)[0]
                 cor_mat = cov_to_cor_z_along(X_adj, row_indices=row_indices, col_indices=col_indices)
-                s_tables = {sname: spl(np.median(margin[row_indices]),
-                                       np.median(margin[col_indices])) for sname, spl in spline_table.items()}
+                s_tables = {sname: spl(margin[row_indices],
+                                       margin[col_indices]) for sname, spl in spline_table.items()}
                 cor_mat = cor_mat - s_tables["mean"]
                 cor_mat = cor_mat / s_tables["std"]
                 if correct is not None:
@@ -40,22 +40,25 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None
                                    data=cor_mat[grow,gcol])
         return 0
 
-def finalize(mat, row, col, cutoff):
+def finalize(mat, row, col, cutoff, chunksize=10000):
         i, j = np.where(mat >= cutoff)
         if len(i) > 0:
                 R = row[i]
                 C = col[j]
                 ind = R != C
                 data = mat[i[ind], j[ind]]
-                return pd.DataFrame({"row": R[ind],
-                                     "col": C[ind],
-                                     "data": data})
-        else:
-                return pd.DataFrame({"row": [],
-                                     "col": [],
-                                     "data": []})
+                df = pd.DataFrame({"row": R[ind],
+                                   "col": C[ind],
+                                   "data": data})
+                return dd.from_pandas(df, chunksize=chunksize)
 
-def fill_matrix_dask(margin, X_adj, bin_assign, spline_table, z, writer, correct=None):
+        else:
+                return dd.from_pandas(pd.DataFrame({"row": [],
+                                                    "col": [],
+                                                    "data": []}),
+                                      chunksize=chunksize)
+
+def fill_matrix_dask(margin, X_adj, bin_assign, spline_table, z, writer, client, correct=None):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         out = []
@@ -77,7 +80,8 @@ def fill_matrix_dask(margin, X_adj, bin_assign, spline_table, z, writer, correct
                                 new_cor_mat = cor_mat
                         done = dask.delayed(finalize)(new_cor_mat, row_indices, col_indices, z)
                         res.append(done)
-        df = dd.from_delayed(res).persist() ### TODO: transform into Client.persist() ??
-        dd.concat([df, df.rename(columns={"row": "col", "col": "row"})]).drop_duplicates(["row","col"]).to_hdf(writer["output"], "matrix")
+        cc = client.compute(res)
+        df = dd.concat(client.gather(cc))
+        dd.concat([df, df.rename(columns={"row": "col", "col": "row"})]).drop_duplicates(["row", "col"]).to_hdf(writer["output"], "matrix")
         with h5py.File(writer["output"], "r+") as W:
                 W["names"] = writer["names"]
