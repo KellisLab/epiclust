@@ -77,7 +77,7 @@ def fill_matrix_dask(margin, X_adj, bin_assign, spline_table, z, writer, correct
                                 new_cor_mat = cor_mat
                         done = dask.delayed(finalize)(new_cor_mat, row_indices, col_indices, z)
                         res.append(done)
-        df = dd.from_delayed(res)
+        df = dd.from_delayed(res).persist() ### TODO: transform into Client.persist() ??
         dd.concat([df, df.rename(columns={"row": "col", "col": "row"})]).drop_duplicates(["row","col"]).to_hdf(writer["output"], "matrix")
         with h5py.File(writer["output"], "r+") as W:
                 W["names"] = writer["names"]
