@@ -28,9 +28,12 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None
                 cor_mat = cor_mat - s_tables["mean"]
                 cor_mat = cor_mat / s_tables["std"]
                 if correct is not None:
-                        new_cor_mat = correct(cor_mat, row_indices, col_indices)
-                        ### tone down outliers from partial correlation
-                        cor_mat = np.mean((cor_mat, new_cor_mat), axis=0)
+                        if type(correct) is tuple:
+                                for k in range(len(correct)):
+                                        if correct[k] is not None:
+                                                cor_mat = correct[k](cor_mat, row_indices, col_indices)
+                        else:
+                                cor_mat = correct(cor_mat, row_indices, col_indices)
                 del s_tables
                 cor_mat[np.equal.outer(row_indices, col_indices)] = -np.inf
                 grow, gcol = np.where(cor_mat >= z)

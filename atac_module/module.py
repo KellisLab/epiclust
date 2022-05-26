@@ -1,6 +1,8 @@
 from .perbin import create_bins_quantile, calc_perbin_stats
 from .spline import Spline
 from .zmatrix import fill_matrix_dask, fill_matrix
+from .pcor import full_partial_correct
+from .neighborhood import find_neighborhoods
 import numpy as np
 import os
 from dask.diagnostics import ProgressBar
@@ -30,6 +32,7 @@ class ModuleMatrix:
                         raise ValueError("Margin %s not in adata.var" % margin)
                 self.margin = adata.var[margin].values
                 self.varnames = adata.var.index.values
+                self.var = adata.var.copy()
                 self.bin_assign, self.bin_edges = create_bins_quantile(self.margin, nbins=nbins)
         def _build_splines(self, X_adj, min_std, k, **kwargs):
                 print("Building splines")
@@ -41,6 +44,22 @@ class ModuleMatrix:
                         S["mean"] = Spline(self.bin_assign, self.bin_edges,
                                            cps["mean"], cps["counts"], k=k)
                 return S
+        def linking(self, power=0, correct=None, cutoff_z=4, sample_z=2,
+                    margin_of_error=0.01, n_bins_sample=2, k=2, min_std=0.001,
+                    output="output.h5"):
+                X_adj = self.VT.T @ np.diag(self.s**power)
+                X_adj = X_adj / np.linalg.norm(X_adj, axis=1, ord=2)[:, None]
+                S = self._build_splines(X_adj, min_std=min_std, k=k, z=sample_z,
+                                        margin_of_error=margin_of_error,
+                                        n_bins_sample=n_bins_sample)
+                neighborhoods = find_neighborhoods(self.var)
+                ### TODO: overlapping communities
+                writer = H5Writer(output, names=self.varnames)
+                return fill_matrix(margin=self.margin,
+                                   X_adj=X_adj, bin_assign=neighborhoods,
+                                   spline_table=S, z=cutoff_z,
+                                   writer=writer,
+                                   correct=(full_partial_correct, correct))
         def build(self, power=0, correct=None, cutoff_z=4, sample_z=2,
                   margin_of_error=0.01, n_bins_sample=2, k=2, min_std=0.001,
                   nproc=os.cpu_count(), output="output.h5"):

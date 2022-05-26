@@ -15,6 +15,16 @@ def adjust_partial_cor(mat, L, R, inv):
         one_over_det = denom_square - np.multiply(mat - sub, mat - sub)
         return np.sign(one_over_det) * (mat - sub)/np.sqrt(denom_square)
 
+def full_partial_correct(zmat, row, col, epsilon=1e-50):
+        cor = np.tanh(zmat)
+        if not isPD(cor):
+                cor = nearPD(cor)
+        icor = np.linalg.inv(cor)
+        D = np.diag(icor)
+        D[np.abs(D) < epsilon] = epsilon
+        neg_out = icor * np.outer(D, D)**(-0.5)
+        return np.arctanh(np.clip(-neg_out, -1+1e-16, 1-1e-16))
+
 class PartialCor:
         def __init__(self, feat_cor_mat_L, self_cor_mat, feat_cor_mat_R, batch_size=5000):
                 if len(np.shape(feat_cor_mat_L)) == 1:
