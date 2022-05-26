@@ -54,11 +54,13 @@ class ModuleMatrix:
                                         n_bins_sample=n_bins_sample)
                 neighborhoods = find_neighborhoods(self.var)
                 ### TODO: overlapping communities
+                print("Computing correlations")
                 writer = H5Writer(output, names=self.varnames)
                 return fill_matrix(margin=self.margin,
                                    X_adj=X_adj, bin_assign=neighborhoods,
                                    spline_table=S, z=cutoff_z,
                                    writer=writer,
+                                   only=True,
                                    correct=(full_partial_correct, correct))
         def build(self, power=0, correct=None, cutoff_z=4, sample_z=2,
                   margin_of_error=0.01, n_bins_sample=2, k=2, min_std=0.001,

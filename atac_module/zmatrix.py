@@ -9,7 +9,7 @@ import pandas as pd
 import dask
 import dask.dataframe as dd
 
-def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None):
+def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None, only=False):
         """bin assign could be any assignment, since spline_table takes in margin itself.
         so, bin_assign could be e.g. chromosome positioning"""
         out = []
@@ -19,6 +19,8 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None
         for i in range(nbin):
                 for j in range(i, nbin):
                         order.append((i,j))
+                        if only:
+                                break
         for i, j in tqdm(order):
                 row_indices = np.where(uniq[i] == bin_assign)[0]
                 col_indices = np.where(uniq[j] == bin_assign)[0]
@@ -40,7 +42,7 @@ def fill_matrix(margin, X_adj, bin_assign, spline_table, z, writer, correct=None
                 if len(grow) > 0 and len(gcol) == len(grow):
                         writer.add(row=row_indices[grow],
                                    col=col_indices[gcol],
-                                   data=cor_mat[grow,gcol])
+                                   data=cor_mat[grow, gcol])
         return 0
 
 def finalize(mat, row, col, cutoff, chunksize=10000):

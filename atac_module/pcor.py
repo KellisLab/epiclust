@@ -23,6 +23,7 @@ def full_partial_correct(zmat, row, col, epsilon=1e-50):
         D = np.diag(icor) + 0
         D[np.abs(D) < epsilon] = epsilon
         neg_out = icor * np.outer(D, D)**(-0.5)
+        print(neg_out.shape)
         return np.arctanh(np.clip(-neg_out, -1+1e-16, 1-1e-16))
 
 class PartialCor:
