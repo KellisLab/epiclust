@@ -17,9 +17,18 @@ def adjust_partial_cor(mat, L, R, inv):
 
 def full_partial_correct(zmat, row, col, epsilon=1e-50):
         cor = np.tanh(zmat)
-        if not isPD(cor):
-                cor = nearPD(cor)
-        icor = np.linalg.inv(cor)
+        for i in range(5):
+                if not isPD(cor):
+                        cor = nearPD(cor + epsilon)
+                else:
+                        break
+        try:
+                icor = np.linalg.inv(cor)
+        except:
+                val, vec = np.linalg.eigh(cor)
+                val[np.abs(val) < 1e-10] = 1e-10
+                icor = vec @ np.diag(1/val) @ vec.T
+                pass
         D = np.diag(icor) + 0
         D[np.abs(D) < epsilon] = epsilon
         neg_out = icor * np.outer(D, D)**(-0.5)
