@@ -18,7 +18,7 @@ def aggregate_chrom(var, distance=100000, offset=0):
                                "End": df["End"].values,
                                "neighborhood": df["neighborhood"].values})
 
-def find_neighborhoods(var, distance=100000, offset=0):
+def find_neighborhoods(var, distance=1000000, offset=0):
     rgr = aggregate_chrom(var, distance=distance, offset=offset)
     vgr = pyranges.from_dict({"Chromosome": var["chrom"].values,
                               "Start": var["loc"].values,
