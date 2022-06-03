@@ -26,8 +26,11 @@ def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=
         # for x in dask.compute(out)[0]:
         for x in out:
                 counts[x["row"], x["col"]] = x["counts"]
+                counts[x["col"], x["row"]] = x["counts"]
                 means[x["row"], x["col"]] = x["mean"]
+                means[x["col"], x["row"]] = x["mean"]
                 stds[x["row"], x["col"]] = x["std"]
+                stds[x["col"], x["row"]] = x["std"]
         return {"counts": counts,
                 "mean": means,
                 "std": stds}

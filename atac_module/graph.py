@@ -13,7 +13,6 @@ def create_graph(adj, vertex_names, min_degree=3, min_size=2, a_max=18.7):
         adj[adj > a_max] = 0
         degree = np.ravel((adj > 0).sum(1))
         adj = adj[degree >= min_degree,:][:,degree >= min_degree]
-
         vertex_names = vertex_names[degree >= min_degree]
         adj = scipy.sparse.coo_matrix(adj)
         g = igraph.Graph(list(tuple(zip(adj.row, adj.col))),
