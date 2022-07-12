@@ -9,12 +9,15 @@ Make sure your data is in an AnnData (H5AD) format with
 so that the modules can be calculated without loading the data matrix into memory.
 ** workflow
 #+BEGIN_SRC python
-am.extract_rep(adata, power=0, margin="log1p_total_counts")
-am.fit_splines(adata)
-am.neighbors(adata)
-tdata = adata.T
-sc.tl.draw_graph(adata)
-sc.tl.umap(adata)
+import atac_module as am
+for power in np.linspace(0, 1, 5):
+	print("Calculating power:", power)
+	am.extract_rep(adata, power=power, margin="log1p_total_counts")
+	am.fit_splines(adata)
+	am.neighbors(adata, key_added="pow_%.2f" % power)
+
+sc.tl.draw_graph(tdata)
+sc.tl.umap(tdata)
 #+END_SRC
 ** to install
 You may need to create a CONDA environment as specified in [[atac_module.yml]].

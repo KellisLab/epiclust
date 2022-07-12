@@ -24,5 +24,8 @@ def neighbors(adata, n_neighbors=100, use_rep="scm", spline_k=2,
                     use_rep=adata.uns[use_rep]["rep"],
                     **neighbors_kwargs)
     adata.varp = tdata.obsp
-    adata.uns["neighbors"]["params"]["metric"] = "custom"
+    if "key_added" in neighbors_kwargs.keys():
+        adata.uns[neighbors_kwargs["key_added"]]["params"]["metric"] = use_rep
+    else:
+        adata.uns["neighbors"]["params"]["metric"] = use_rep  ### custom func is not saveable
     return adata
