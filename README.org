@@ -8,17 +8,14 @@ Make sure your data is in an AnnData (H5AD) format with
 
 so that the modules can be calculated without loading the data matrix into memory.
 ** workflow
-*** calculate rep
-am.extract_reduction(adata, power=0, key_added="X_zca", margin="log1p_total_counts", covariates=[])
-*** calculate splines
-am.calculate_splines(adata, use_rep="X_zca", margin="n_cells_by_counts")
-*** add margin to rep
-adata.obsm["X_margin_zca"] = np.hstack((adata.obs["n_cells_by_counts"], adata.obsm["X_zca"]))
-*** calculate neighbors
-sc.pp.neighbors(adata, metric=am.distance, use_rep="X_margin_zca", metric_kwargs=adata.uns["scmod"]["splines"], n_neighbors=100, key_added="mod")
-*** plot
-sc.tl.draw_graph(adata, obsp="mod", layout="fr", key_added_ext="mod")
-
+#+BEGIN_SRC python
+am.extract_rep(adata, power=0, margin="log1p_total_counts")
+am.fit_splines(adata)
+am.neighbors(adata)
+tdata = adata.T
+sc.tl.draw_graph(adata)
+sc.tl.umap(adata)
+#+END_SRC
 ** to install
 You may need to create a CONDA environment as specified in [[atac_module.yml]].
 
