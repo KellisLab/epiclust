@@ -26,5 +26,7 @@ TODO: exp(-x) to more cdf like
                   k, k, x[:1], y[:1])
     std = bispeu(std_knots_x.copy(), std_knots_y.copy(), std_coeffs.copy(),
                  k, k, x[:1], y[:1])
-    std = np.clip(std, a_min=min_std, a_max=np.inf)
-    return np.exp(-1 * (np.arctanh(result.clip(-1+1e-16, 1-1e-16)) - mean) / std)[0]
+    std[std < min_std] = min_std
+    result[result < -1+1e-16] = -1+1e-16
+    result[result > 1-1e-16] = 1-1e-16
+    return np.exp(-1 * (np.arctanh(result) - mean) / std)[0]
