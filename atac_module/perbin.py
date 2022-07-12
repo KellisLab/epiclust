@@ -1,10 +1,9 @@
-from .utils import *
+from .utils import calc_stats_per_bin
 
 import numpy as np
 from tqdm.auto import tqdm
-import dask
+
 def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=2):
-        rep = rep.astype(np.double)
         uniq = np.unique(bin_assign)
         nbin = len(uniq)
         ss_numer = z * z * 0.25 / (margin_of_error * margin_of_error) ### sample size = ss_numer / (1 + ss_numer/n)
@@ -38,5 +37,6 @@ def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=
 def create_bins_quantile(margin, nbins=50):
         spt = np.array_split(np.sort(margin), nbins)
         edges = [np.min(x) for x in spt] + [np.max(margin)]
+        edges = np.unique(edges) ### removes duplicate counts
         indices = np.digitize(margin, edges[:-1])
         return indices, np.asarray(edges)
