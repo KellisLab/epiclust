@@ -1,7 +1,6 @@
 
 from .distance import distance
 from .spline import build_spline
-from scipy.interpolate.dfitpack import bispeu
 
 def neighbors(adata, n_neighbors=100, use_rep="scm", spline_k=2,
               transpose=True, min_std=0.001, **neighbors_kwargs):
@@ -10,6 +9,8 @@ def neighbors(adata, n_neighbors=100, use_rep="scm", spline_k=2,
     std_spl = build_spline(adata, key=use_rep, spline="std", k=spline_k)
     if transpose:
         tdata = adata.T
+    else:
+        tdata = adata
     sc.pp.neighbors(tdata,
                     n_neighbors=n_neighbors,
                     metric=distance,
@@ -23,7 +24,8 @@ def neighbors(adata, n_neighbors=100, use_rep="scm", spline_k=2,
                                  "k": spline_k},
                     use_rep=adata.uns[use_rep]["rep"],
                     **neighbors_kwargs)
-    adata.varp = tdata.obsp
+    if transpose:
+        adata.varp = tdata.obsp
     if "key_added" in neighbors_kwargs.keys():
         adata.uns[neighbors_kwargs["key_added"]]["params"]["metric"] = use_rep
     else:

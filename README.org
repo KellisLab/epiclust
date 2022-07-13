@@ -16,8 +16,7 @@ for power in np.linspace(0, 1, 5):
 	am.fit_splines(adata)
 	am.neighbors(adata, key_added="pow_%.2f" % power)
 
-sc.tl.draw_graph(tdata)
-sc.tl.umap(tdata)
+am.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=2, max_comm_size=1000)
 #+END_SRC
 ** to install
 You may need to create a CONDA environment as specified in [[atac_module.yml]].

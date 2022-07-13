@@ -6,8 +6,6 @@ from numba import types
 from numba.extending import intrinsic
 from numba.core import cgutils
 import scipy.interpolate.dfitpack
-DBL_P = ctypes.POINTER(ctypes.c_double)
-INT_P = ctypes.POINTER(ctypes.c_longlong)
 
 def capsule_name(capsule):
     """ from https://github.com/numba/numba/issues/7818 """
@@ -39,10 +37,11 @@ def ptr_to_val(typingctx, data):
     return sig, impl
 
 _bispeu_functype = ctypes.CFUNCTYPE(ctypes.c_void_p,
-                                    DBL_P, INT_P, DBL_P, INT_P,
-                                    DBL_P, INT_P, INT_P,
-                                    DBL_P, DBL_P, DBL_P,
-                                    INT_P, DBL_P, INT_P, INT_P)
+                                    ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_longlong), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_longlong),
+                                    ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_longlong), ctypes.POINTER(ctypes.c_longlong),
+                                    ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double),
+                                    ctypes.POINTER(ctypes.c_longlong), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_longlong), ctypes.POINTER(ctypes.c_longlong))
+
 BISPEU = _bispeu_functype(get_f2py_function_address(scipy.interpolate.dfitpack.bispeu._cpointer))
 
 @numba.njit('float64[::1](float64[::1],float64[::1],float64[::1],int64,int64,float32[::1],float32[::1])')
