@@ -14,6 +14,18 @@ def _gather_varp(adata, graph_name_list):
         L[g] = conn
     return L
 
+def _filter_var(adata, conn, z=None, pct=0.0):
+    """Recall that distances are computed as np.exp(-z) to turn correlations into distances"""
+    import numpy as np
+    if z is None:
+        z = -np.log(adata.varp[conn].data).mean()
+    max_distance = np.exp(-z)
+    nn = (adata.varp[conn] > 0).sum(1)
+    M = nn - (adata.varp[conn] > max_distance).sum(1)
+    ### what percentage of nearest neighbors for each .var are close enough?
+    I, _ = np.where(M > (nn.max() * pct))
+    return I
+
 def infomap(adata, graph_name_list, key_added="infomap", prefix="M", **kwargs):
     from infomap import Infomap
     import pandas as pd
@@ -38,6 +50,27 @@ def leiden(adata, graph_name_list, key_added="leiden", resolution=1., prefix="M"
     for conn in _gather_varp(adata, graph_name_list).values():
         V = adata.varp[conn]
         G.append(sc._utils.get_igraph_from_adjacency(V))
+    if not G:
+        raise RuntimeError("No graphs present")
     memb, _ = leidenalg.find_partition_multiplex(G, leidenalg.RBConfigurationVertexPartition,
                                                  resolution_parameter=resolution, **kwargs)
     adata.var[key_added] = pd.Categorical(["%s%d" % (prefix, x+1) for x in memb])
+
+def embedding(adata, graph_name, prefix="X_", **kwargs):
+    from sklearn.manifold import spectral_embedding
+    conn = _gather_varp([graph_name]).values()[0]
+    se = spectral_embedding(adata.varp[conn], **kwargs)
+    adata.varm["%s%s" % (prefix, graph_name)] = se
+
+def select_clusters(adata, clust_name, graph_name, key_added="selected", power=-0.5):
+    from sklearn.metrics import silhouette_score
+    import numpy as np
+    import scipy.sparse
+    conn = list(_gather_varp(adata, [graph_name]).values())[0]
+    uc, cinv, cnt = np.unique(adata.var[clust_name], return_inverse=True, return_counts=True)
+    S = scipy.sparse.csr_matrix((cnt[cinv]**power,
+                                 (np.arange(len(cinv)),
+                                  cinv)))
+    CS = adata.varp[conn].dot(S)
+    top = np.ravel(CS[np.arange(len(cinv)), cinv])
+    bot = np.ravel(CS.sum(1))
