@@ -23,9 +23,9 @@ TODO: exp(-x) to more cdf like
         dot = x[i] * y[i]
         result += dot
     mean = bispeu(mean_knots_x.copy(), mean_knots_y.copy(), mean_coeffs.copy(),
-                  k, k, x[:1], y[:1])
+                  k, k, x[:1].astype(np.float32), y[:1].astype(np.float32))
     std = bispeu(std_knots_x.copy(), std_knots_y.copy(), std_coeffs.copy(),
-                 k, k, x[:1], y[:1])
+                 k, k, x[:1].astype(np.float32), y[:1].astype(np.float32))
     std[std < min_std] = min_std
     result[result < -1+1e-16] = -1+1e-16
     result[result > 1-1e-16] = 1-1e-16
