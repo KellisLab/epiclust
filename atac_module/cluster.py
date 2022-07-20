@@ -29,7 +29,7 @@ def filter_var(adata, graph_name_list, z=None, pct=0.0):
     from functools import reduce
     import numpy as np
     G = _gather_varp(adata, graph_name_list)
-    I = [_filter_var(adata, conn, z, pct).values() for conn in G]
+    I = [_filter_var(adata, conn, z, pct) for conn in G.values()]
     return adata.var.index.values[reduce(np.union1d, I)]
 
 def infomap(adata, graph_name_list, key_added="infomap", prefix="M", **kwargs):
