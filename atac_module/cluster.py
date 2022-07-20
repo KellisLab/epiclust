@@ -1,5 +1,4 @@
 
-import igraph
 
 def _gather_varp(adata, graph_name_list):
     L = {}
@@ -25,6 +24,13 @@ def _filter_var(adata, conn, z=None, pct=0.0):
     ### what percentage of nearest neighbors for each .var are close enough?
     I, _ = np.where(M > (nn.max() * pct))
     return I
+
+def filter_var(adata, graph_name_list, z=None, pct=0.0):
+    from functools import reduce
+    import numpy as np
+    G = _gather_varp(adata, graph_name_list)
+    I = [_filter_var(adata, conn, z, pct) for conn in G]
+    return adata.var.index.values[reduce(np.union1d, I)]
 
 def infomap(adata, graph_name_list, key_added="infomap", prefix="M", **kwargs):
     from infomap import Infomap
