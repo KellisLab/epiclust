@@ -1,13 +1,13 @@
 
 
-def _gather_varp(adata, graph_name_list):
+def _gather_varp(adata, graph_name_list, graph="connectivities_key"):
     L = {}
     for g in set(graph_name_list):
         if g not in adata.uns.keys():
             continue
-        if "connectivities_key" not in adata.uns[g]:
+        if graph not in adata.uns[g]:
             continue
-        conn = adata.uns[g]["connectivities_key"]
+        conn = adata.uns[g][graph]
         if conn not in adata.varp.keys():
             continue
         L[g] = conn
@@ -28,7 +28,7 @@ def _filter_var(adata, conn, z=None, pct=0.0):
 def filter_var(adata, graph_name_list, z=None, pct=0.0):
     from functools import reduce
     import numpy as np
-    G = _gather_varp(adata, graph_name_list)
+    G = _gather_varp(adata, graph_name_list, graph="distances_key")
     I = [_filter_var(adata, conn, z, pct) for conn in G.values()]
     return adata.var.index.values[reduce(np.union1d, I)]
 
