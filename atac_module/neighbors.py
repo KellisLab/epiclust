@@ -3,16 +3,20 @@ from .distance import distance
 from .spline import build_spline
 
 def neighbors(adata, n_neighbors=100, use_rep="scm", spline_k=2,
-              transpose=True, min_std=0.001, **neighbors_kwargs):
+              transpose=True, batch_key=None, min_std=0.001, **neighbors_kwargs):
     import scanpy as sc
+    from functools import partial
     mean_spl = build_spline(adata, key=use_rep, spline="mean", k=spline_k)
     std_spl = build_spline(adata, key=use_rep, spline="std", k=spline_k)
     if transpose:
         tdata = adata.T
     else:
         tdata = adata
-    sc.pp.neighbors(tdata,
-                    n_neighbors=n_neighbors,
+    if batch_key is not None and batch_key in tdata.obs.columns:
+        func = partial(sc.external.pp.bbknn, adata=tdata, batch_key=batch_key)
+    else:
+        func = partial(sc.pp.neighbors, adata=tdata)
+    func(n_neighbors=n_neighbors,
                     metric=distance,
                     metric_kwds={"mean_knots_x": mean_spl.get_knots()[0],
                                  "mean_knots_y": mean_spl.get_knots()[1],
