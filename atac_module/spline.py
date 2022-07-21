@@ -29,3 +29,13 @@ def build_spline(adata, key="scm", spline="mean", k=2, split=None):
                                                        z=m_data.data,
                                                        kx=k, ky=k,
                                                        w=np.log10(2+counts))
+
+def spline_grid_ordered(spl, x, y, **kwargs):
+        Ix = np.argsort(x)
+        I1x = np.argsort(Ix)
+        Iy = np.argsort(y)
+        I1y = np.argsort(Iy)
+        data = spl(x[Ix], y[Iy], grid=True, **kwargs)
+        data = data[I1x, :]
+        data = data[:, I1y]
+        return data
