@@ -8,9 +8,9 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.00
     from sklearn.utils import check_random_state
     import scipy.sparse
     import scanpy as sc
-    metric_kwds = {"min_std": min_std}
-    metric_kwds["mean_weights"] = build_ridge(adata, key=use_rep, spline="mean")
-    metric_kwds["std_weights"] = build_ridge(adata, key=use_rep, spline="std")
+    si = adata.uns[use_rep]["spline_info"]
+    metric_kwds = {"min_std": min_std, "mids": si["mids"],
+                   "mean_grid": si["mean"], "std_grid": si["std"]}
     rep = adata.uns[use_rep]["rep"]
     X = adata.varm[rep]
     knn_indices, knn_dists, _ = nearest_neighbors(X,
