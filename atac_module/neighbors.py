@@ -1,6 +1,5 @@
 
 from .distance import distance
-from .spline import build_spline, build_ridge
 
 def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.001, random_state=0, verbose=False):
     """rip off of scipy nearest neighbors, but does not transpose anndata"""
@@ -8,7 +7,7 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.00
     from sklearn.utils import check_random_state
     import scipy.sparse
     import scanpy as sc
-    si = adata.uns[use_rep]["spline_info"]
+    si = adata.uns[use_rep]["bin_info"]
     metric_kwds = {"min_std": min_std, "mids": si["mids"],
                    "mean_grid": si["mean"], "std_grid": si["std"]}
     rep = adata.uns[use_rep]["rep"]
