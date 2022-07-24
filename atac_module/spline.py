@@ -4,7 +4,7 @@ import scipy.sparse
 import scipy.interpolate
 from .perbin import create_bins_quantile, calc_perbin_stats
 
-def fit_splines(adata, n_bins=50, key="scm", z=2, margin_of_error=0.05, n_bins_sample=2):
+def fit_splines(adata, n_bins=100, key="scm", z=2, margin_of_error=0.05, n_bins_sample=2, outlier=0.99):
         if key not in adata.uns or "rep" not in adata.uns[key]:
                 print("Run extract_module first")
                 return -1
@@ -14,7 +14,7 @@ def fit_splines(adata, n_bins=50, key="scm", z=2, margin_of_error=0.05, n_bins_s
         bin_assign, edges = create_bins_quantile(margin, nbins=n_bins)
         cps = calc_perbin_stats(X_adj, bin_assign=bin_assign, z=z,
                                 margin_of_error=margin_of_error,
-                                n_bins_sample=n_bins_sample)
+                                n_bins_sample=n_bins_sample, outlier=outlier)
         cps["mids"] = (edges[1:] + edges[:-1]) / 2.
         adata.uns[key]["spline_info"] = cps
 
@@ -45,7 +45,12 @@ def build_ridge(adata, key="scm", spline="mean", **kwargs):
         cps = adata.uns[key]["spline_info"]
         bin_mids = cps["mids"]
         R, C = np.where(cps["counts"] > 0)
-        X = np.vstack((bin_mids[R], bin_mids[C], bin_mids[R]*bin_mids[C])).T
+        X = np.vstack((bin_mids[R],
+                       bin_mids[C],
+                       bin_mids[R]*bin_mids[R],
+                       bin_mids[R]*bin_mids[C],
+                       bin_mids[C]*bin_mids[C]
+                       )).T
         model = Ridge(**kwargs)
         model.fit(X, cps[spline][R, C], cps["counts"][R, C])
-        return np.hstack((model.intercept_, model.coef_))
+        return np.hstack((model.intercept_, model.coef_)).astype(np.float64)

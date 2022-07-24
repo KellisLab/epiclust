@@ -7,14 +7,19 @@ import logging
 from numba import float64, types
 
 @numba.njit
-def distance(x, y, mean_weights=np.ones(4), std_weights=np.ones(4),
-             min_std=0.001):
+def distance(x, y, min_std=0.001, mean_weights=np.ones(6), std_weights=np.ones(6)):
     """kwargs is .uns[key]"""
     dim = x.shape[0]
-    margin = np.ones(4)
+    margin = np.ones(6)
     margin[1] = x[0]
     margin[2] = x[1]
-    margin[3] = x[0] * x[1]
+    margin[3] = x[0] * x[0]
+    margin[4] = x[0] * x[1]
+    margin[5] = x[1] * x[1]
+    # margin[6] = x[0] * x[0] * x[0]
+    # margin[7] = x[0] * x[0] * x[1]
+    # margin[8] = x[0] * x[1] * x[1]
+    # margin[9] = x[1] * x[1] * x[1]
     result = np.zeros(1)
     mean = np.zeros(1)
     std = np.zeros(1)

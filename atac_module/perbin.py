@@ -3,7 +3,7 @@ from .utils import calc_stats_per_bin
 import numpy as np
 from tqdm.auto import tqdm
 
-def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=2):
+def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=2, outlier=0.99):
         uniq = np.unique(bin_assign)
         nbin = len(uniq)
         ss_numer = z * z * 0.25 / (margin_of_error * margin_of_error) ### sample size = ss_numer / (1 + ss_numer/n)
@@ -30,6 +30,10 @@ def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=
                 means[x["col"], x["row"]] = x["mean"]
                 stds[x["row"], x["col"]] = x["std"]
                 stds[x["col"], x["row"]] = x["std"]
+        means = means.clip(np.quantile(means, 1-outlier),
+                           np.quantile(means, outlier))
+        stds = stds.clip(np.quantile(stds, 1-outlier),
+                         np.quantile(stds, outlier))
         return {"counts": counts,
                 "mean": means,
                 "std": stds}

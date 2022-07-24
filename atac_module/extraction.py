@@ -29,7 +29,9 @@ def extract_rep(adata, power=0.0, margin="log1p_total_counts",
             X_adj = X_adj - X_adj.mean(1)[:, None]
     X_adj = X_adj / np.linalg.norm(X_adj, axis=1, ord=2)[:, None]
     rep = "X_%s" % key_added
-    adata.varm[rep] = np.hstack((adata.var[margin].values[:, None],
+    M = adata.var[margin].values[:, None]
+    M = (M - np.min(M)) / (np.max(M) - np.min(M)) ### min-max scale
+    adata.varm[rep] = np.hstack((2 * M - 1, ### -1 to 1 scale
                                  X_adj)).astype(np.float32)
     adata.uns[key_added] = {"rep": rep,
                             "margin": margin,

@@ -2,31 +2,52 @@
 from .distance import distance
 from .spline import build_spline, build_ridge
 
-def neighbors(adata, n_neighbors=100, use_rep="scm",
-              transpose=True, batch_key=None, min_std=0.001, **neighbors_kwargs):
+def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.001, random_state=0, verbose=False):
+    """rip off of scipy nearest neighbors, but does not transpose anndata"""
+    from umap.umap_ import nearest_neighbors, fuzzy_simplicial_set
+    from sklearn.utils import check_random_state
+    import scipy.sparse
     import scanpy as sc
-    from functools import partial
-    import numpy as np
-    mean_spl = build_ridge(adata, key=use_rep, spline="mean")
-    std_spl = build_ridge(adata, key=use_rep, spline="std")
-    if transpose:
-        tdata = adata.T
+    metric_kwds = {"min_std": min_std}
+    metric_kwds["mean_weights"] = build_ridge(adata, key=use_rep, spline="mean")
+    metric_kwds["std_weights"] = build_ridge(adata, key=use_rep, spline="std")
+    rep = adata.uns[use_rep]["rep"]
+    X = adata.varm[rep]
+    knn_indices, knn_dists, _ = nearest_neighbors(X,
+                                                  n_neighbors=n_neighbors,
+                                                  metric=distance,
+                                                  metric_kwds=metric_kwds,
+                                                  angular=True, ### correlation is angular-based
+                                                  random_state=check_random_state(random_state),
+                                                  verbose=verbose)
+    X = scipy.sparse.lil_matrix((adata.shape[1], 1))
+    connectivities, _, _ = fuzzy_simplicial_set(X,
+                                                n_neighbors,
+                                                None, None,
+                                                knn_indices=knn_indices,
+                                                knn_dists=knn_dists,
+                                                set_op_mix_ratio=1.0,
+                                                local_connectivity=1.0)
+    distances = sc.neighbors._get_sparse_matrix_from_indices_distances_umap(
+        knn_indices=knn_indices,
+        knn_dists=knn_dists,
+        n_obs=adata.shape[1],
+        n_neighbors=n_neighbors)
+    if key_added is None:
+        key_added = 'neighbors'
+        conns_key = 'connectivities'
+        dists_key = 'distances'
     else:
-        tdata = adata
-    if batch_key is not None and batch_key in tdata.obs.columns:
-        func = partial(sc.external.pp.bbknn, adata=tdata, batch_key=batch_key)
-    else:
-        func = partial(sc.pp.neighbors, adata=tdata)
-    func(n_neighbors=n_neighbors,
-                    metric=distance,
-                    metric_kwds={"mean_weights": mean_spl.astype(np.float64),
-                                 "std_weights": std_spl.astype(np.float64),
-                                 "min_std": min_std},
-                    use_rep=adata.uns[use_rep]["rep"],
-                    **neighbors_kwargs)
-    if transpose:
-        adata.varp = tdata.obsp
-    if "key_added" in neighbors_kwargs.keys():
-        adata.uns[neighbors_kwargs["key_added"]]["params"]["metric"] = use_rep
-    else:
-        adata.uns["neighbors"]["params"]["metric"] = use_rep  ### custom func is not saveable
+        conns_key = key_added + '_connectivities'
+        dists_key = key_added + '_distances'
+    adata.uns[key_added] = {}
+    neighbors_dict = adata.uns[key_added]
+    neighbors_dict['connectivities_key'] = conns_key
+    neighbors_dict['distances_key'] = dists_key
+    neighbors_dict['params'] = {'n_neighbors': n_neighbors, 'method': "umap"}
+    neighbors_dict['params']['random_state'] = random_state
+    neighbors_dict['params']['metric'] = "custom"
+    neighbors_dict['params']['metric_kwds'] = metric_kwds
+    neighbors_dict['params']['use_rep'] = rep
+    adata.varp[dists_key] = distances
+    adata.varp[conns_key] = connectivities.tocsr()
