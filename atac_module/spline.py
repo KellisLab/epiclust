@@ -39,3 +39,13 @@ def spline_grid_ordered(spl, x, y, **kwargs):
         data = data[I1x, :]
         data = data[:, I1y]
         return data
+
+def build_ridge(adata, key="scm", spline="mean", **kwargs):
+        from sklearn.linear_model import Ridge
+        cps = adata.uns[key]["spline_info"]
+        bin_mids = cps["mids"]
+        R, C = np.where(cps["counts"] > 0)
+        X = np.vstack((bin_mids[R], bin_mids[C], bin_mids[R]*bin_mids[C])).T
+        model = Ridge(**kwargs)
+        model.fit(X, cps[spline][R, C], cps["counts"][R, C])
+        return np.hstack((model.intercept_, model.coef_))

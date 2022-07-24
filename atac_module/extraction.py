@@ -16,7 +16,7 @@ def extract_pca(adata, n_pcs=None):
         return U, s, VT
 
 def extract_rep(adata, power=0.0, margin="log1p_total_counts",
-                key_added="scm", covariates=[], n_pcs=None):
+                key_added="scm", covariates=[], n_pcs=None, zero_center=True):
     if margin not in adata.var.columns:
         print("Margin", margin, "not in adata.var")
         return -1
@@ -24,11 +24,15 @@ def extract_rep(adata, power=0.0, margin="log1p_total_counts",
         print("Must run sc.pp.pca first")
         return -1
     U, s, VT = extract_pca(adata, n_pcs=n_pcs)
-    X_adj = VT.T @ np.diag(s**power)
+    X_adj = VT.T.astype(np.float64) @ np.diag(s**power)
+    if zero_center:
+            X_adj = X_adj - X_adj.mean(1)[:, None]
     X_adj = X_adj / np.linalg.norm(X_adj, axis=1, ord=2)[:, None]
     rep = "X_%s" % key_added
     adata.varm[rep] = np.hstack((adata.var[margin].values[:, None],
-                                 X_adj))
+                                 X_adj)).astype(np.float32)
     adata.uns[key_added] = {"rep": rep,
                             "margin": margin,
+                            "power": power,
+                            "zero_center": zero_center,
                             "covariates": covariates}

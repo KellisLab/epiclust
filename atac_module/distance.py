@@ -4,29 +4,27 @@ import numba
 from .bispeu import bispeu_wrapped as bispeu
 import numba
 import logging
+from numba import float64, types
 
 @numba.njit
-def distance(x, y, mean_knots_x=None, mean_knots_y=None, mean_coeffs=None,
-             std_knots_x=None, std_knots_y=None, std_coeffs=None,
-             min_std=0.001, k=2):
-    """kwargs is .uns[key]
--logcdf ensures self distance is zero
-TODO: change .copy() for knots into readonly bispeu numba signature
-TODO: exp(-x) to more cdf like
-"""
-    # logger = logging.getLogger("distance")
-    # logger.setLevel(logging.DEBUG)
-    # logger.debug(" ".join(["%s" % k for k in kwargs.keys()]))
+def distance(x, y, mean_weights=np.ones(4), std_weights=np.ones(4),
+             min_std=0.001):
+    """kwargs is .uns[key]"""
     dim = x.shape[0]
+    margin = np.ones(4)
+    margin[1] = x[0]
+    margin[2] = x[1]
+    margin[3] = x[0] * x[1]
     result = np.zeros(1)
+    mean = np.zeros(1)
+    std = np.zeros(1)
     for i in range(1, dim):
         dot = x[i] * y[i]
         result += dot
-    mean = bispeu(mean_knots_x.copy(), mean_knots_y.copy(), mean_coeffs.copy(),
-                  k, k, x[:1].astype(np.float32), y[:1].astype(np.float32))
-    std = bispeu(std_knots_x.copy(), std_knots_y.copy(), std_coeffs.copy(),
-                 k, k, x[:1].astype(np.float32), y[:1].astype(np.float32))
+    mean += margin.dot(mean_weights)
+    std += margin.dot(std_weights)
     std[std < min_std] = min_std
     result[result < -1+1e-16] = -1+1e-16
     result[result > 1-1e-16] = 1-1e-16
-    return np.exp(-1 * (np.arctanh(result) - mean) / std)[0]
+    out = np.exp(-1 * (np.arctanh(result) - mean) / std)
+    return(out[0])
