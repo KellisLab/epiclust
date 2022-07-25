@@ -27,7 +27,8 @@ def extract_rep(adata, power=0.0, margin="log1p_total_counts",
     X_adj = VT.T.astype(np.float64) @ np.diag(s**power)
     if zero_center:
             X_adj = X_adj - X_adj.mean(1)[:, None]
-    X_adj = X_adj / np.linalg.norm(X_adj, axis=1, ord=2)[:, None]
+    norm = np.linalg.norm(X_adj, axis=1, ord=2)[:, None]
+    X_adj = X_adj / norm.clip(1e-100, np.inf)
     rep = "X_%s" % key_added
     M = adata.var[margin].values[:, None]
     M = (M - np.min(M)) / (np.max(M) - np.min(M)) ### min-max scale

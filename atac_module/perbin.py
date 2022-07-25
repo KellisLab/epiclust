@@ -4,33 +4,34 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 from tqdm.auto import tqdm
 
-def calc_perbin_stats(rep, bin_assign, margin_of_error=0.05, z=2, n_bins_sample=1, blur=1):
-        uniq = np.unique(bin_assign)
-        nbin = len(uniq)
+def calc_perbin_stats(rep, bin_assign_row, bin_assign_col, where_row=None, where_col=None,
+                      margin_of_error=0.05, z=2, n_bins_sample=1, blur=1):
+        r_uniq = np.unique(bin_assign_row)
+        c_uniq = np.unique(bin_assign_col)
         ss_numer = z * z * 0.25 / (margin_of_error * margin_of_error) ### sample size = ss_numer / (1 + ss_numer/n)
-        counts = np.zeros((nbin, nbin), dtype=int)
-        means = np.zeros((nbin, nbin))
-        stds = np.zeros((nbin, nbin))
+        counts = np.zeros((len(r_uniq), len(c_uniq)), dtype=int)
+        means = np.zeros((len(r_uniq), len(c_uniq)))
+        stds = np.zeros((len(r_uniq), len(c_uniq)))
         n_bins_sample = max(1, n_bins_sample)
         out = []
-        for i in range(nbin):
-                for j in range(i, nbin):
-                        row_indices = np.where(np.abs(uniq[i] - bin_assign) < n_bins_sample)[0]
-                        col_indices = np.where(np.abs(uniq[j] - bin_assign) < n_bins_sample)[0]
+        for i in range(len(r_uniq)):
+                for j in range(len(c_uniq)): ### not symmetric
+                        row_indices = np.where(np.abs(r_uniq[i] - bin_assign_row) < n_bins_sample)[0]
+                        col_indices = np.where(np.abs(c_uniq[j] - bin_assign_col) < n_bins_sample)[0]
+                        if where_row is not None:
+                                row_indices = where_row[row_indices]
+                        if where_col is not None:
+                                col_indices = where_col[col_indices]
                         ss_n = np.sqrt(len(row_indices)*len(col_indices)) ### take harmonic mean which will balance the # of actual comparisons
                         ss = int(np.ceil(ss_numer / (1 + ss_numer/ss_n)))
                         row_indices = np.random.choice(row_indices, min(len(row_indices), int(ss)), replace=False)
                         col_indices = np.random.choice(col_indices, min(len(col_indices), int(ss)), replace=False)
                         ret = calc_stats_per_bin(rep, row_indices, col_indices, out_row=i, out_col=j)
                         out.append(ret)
-        # for x in dask.compute(out)[0]:
         for x in out:
                 counts[x["row"], x["col"]] = x["counts"]
-                counts[x["col"], x["row"]] = x["counts"]
                 means[x["row"], x["col"]] = x["mean"]
-                means[x["col"], x["row"]] = x["mean"]
                 stds[x["row"], x["col"]] = x["std"]
-                stds[x["col"], x["row"]] = x["std"]
         means = gaussian_filter(means, blur)
         stds = gaussian_filter(stds, blur)
         return {"counts": counts,

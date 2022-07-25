@@ -2,21 +2,68 @@
 import numpy as np
 import scipy.sparse
 import scipy.interpolate
+from itertools import combinations_with_replacement
 from .perbin import create_bins_quantile, calc_perbin_stats
 
-def fit_splines(adata, n_bins=50, key="scm", z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
+
+def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
+        if where_x is not None:
+                where_x = np.ravel(where_x)
+                x_assign, x_edges = create_bins_quantile(margin[where_x], nbins=nbins)
+        else:
+                x_assign, x_edges = create_bins_quantile(margin, nbins=nbins)
+        if where_y is not None:
+                where_y = np.ravel(where_y)
+                y_assign, y_edges = create_bins_quantile(margin[where_y], nbins=nbins)
+        else:
+                y_assign, y_edges = create_bins_quantile(margin, nbins=nbins)
+        cps = calc_perbin_stats(X_adj,
+                                bin_assign_row=x_assign, bin_assign_col=y_assign,
+                                where_row=where_x, where_col=where_y, **kwargs)
+        cps["mids_x"] = (x_edges[1:] + x_edges[:-1]) / 2.
+        cps["mids_y"] = (y_edges[1:] + y_edges[:-1]) / 2.
+        return cps
+
+def fit_splines(adata, n_bins=50, key="scm",
+                batch=None,
+                z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
         if key not in adata.uns or "rep" not in adata.uns[key]:
                 print("Run extract_module first")
                 return -1
         X_adj = adata.varm[adata.uns[key]["rep"]]
         margin = X_adj[:, 0]
         X_adj = X_adj[:, 1:]
-        bin_assign, edges = create_bins_quantile(margin, nbins=n_bins)
-        cps = calc_perbin_stats(X_adj, bin_assign=bin_assign, z=z,
-                                margin_of_error=margin_of_error,
-                                n_bins_sample=n_bins_sample, blur=blur)
-        cps["mids"] = (edges[1:] + edges[:-1]) / 2.
-        adata.uns[key]["bin_info"] = cps
+        if batch is not None and batch in adata.var.columns:
+                ub, binv = np.unique(adata.var[batch].values, return_inverse=True)
+                tbl = {}
+                for i, j in combinations_with_replacement(np.arange(len(ub)), 2):
+                        ### Use sqrt to ensure enough bins
+                        nbins = np.min([n_bins,
+                                        int(np.sqrt(np.sum(i == binv))),
+                                        int(np.sqrt(np.sum(j == binv)))])
+                        if nbins < 10:
+                                print("Warning: Batches", ub[i], "and", ub[j], "have only", nbins, "bins")
+                        cps = _fit_bins(X_adj=X_adj,
+                                        margin=margin,
+                                        nbins=nbins,
+                                        where_x=np.where(i == binv),
+                                        where_y=np.where(j == binv),
+                                        z=z,
+                                        margin_of_error=margin_of_error,
+                                        n_bins_sample=n_bins_sample,
+                                        blur=blur)
+                        tbl["%s %s" % (ub[i], ub[j])] = cps
+                adata.uns[key]["bin_info"] = tbl
+                adata.uns[key]["batches"] = ub
+                adata.uns[key]["batch_key"] = batch
+        else:
+                adata.uns[key]["bin_info"] = _fit_bins(X_adj=X_adj,
+                                                       margin=margin,
+                                                       nbins=n_bins,
+                                                       z=z,
+                                                       margin_of_error=margin_of_error,
+                                                       n_bins_sample=n_bins_sample,
+                                                       blur=blur)
 
 def build_spline(adata, key="scm", spline="mean", k=2, split=None):
         """split can be for example feature_type for linking"""

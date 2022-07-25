@@ -1,14 +1,13 @@
 
 from .distance import distance
+from .neighbors_util import compute_connectivities_umap
+from .neighbors_batch import neighbors_batch
 
-def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.001, random_state=0, verbose=False):
-    """rip off of scipy nearest neighbors, but does not transpose anndata"""
-    from umap.umap_ import nearest_neighbors, fuzzy_simplicial_set
-    from sklearn.utils import check_random_state
-    import scipy.sparse
-    import scanpy as sc
+def _neighbors_full(adata, use_rep, n_neighbors, min_std, random_state, verbose):
+    from umap.umap_ import nearest_neighbors
     si = adata.uns[use_rep]["bin_info"]
-    metric_kwds = {"min_std": min_std, "mids": si["mids"],
+    metric_kwds = {"min_std": min_std,
+                   "mids_x": si["mids_x"], "mids_y": si["mids_y"],
                    "mean_grid": si["mean"], "std_grid": si["std"]}
     rep = adata.uns[use_rep]["rep"]
     X = adata.varm[rep]
@@ -16,37 +15,51 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.00
                                                   n_neighbors=n_neighbors,
                                                   metric=distance,
                                                   metric_kwds=metric_kwds,
-                                                  angular=True, ### correlation is angular-based
-                                                  random_state=check_random_state(random_state),
+                                                  angular=True,
+                                                  random_state=random_state,
                                                   verbose=verbose)
-    X = scipy.sparse.lil_matrix((adata.shape[1], 1))
-    connectivities, _, _ = fuzzy_simplicial_set(X,
-                                                n_neighbors,
-                                                None, None,
-                                                knn_indices=knn_indices,
-                                                knn_dists=knn_dists,
-                                                set_op_mix_ratio=1.0,
-                                                local_connectivity=1.0)
-    distances = sc.neighbors._get_sparse_matrix_from_indices_distances_umap(
-        knn_indices=knn_indices,
-        knn_dists=knn_dists,
-        n_obs=adata.shape[1],
-        n_neighbors=n_neighbors)
-    if key_added is None:
-        key_added = 'neighbors'
-        conns_key = 'connectivities'
-        dists_key = 'distances'
+    return knn_indices, knn_dists
+
+def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.001, random_state=0, verbose=False, set_op_mix_ratio=1.0, local_connectivity=1.0):
+    """rip off of scipy nearest neighbors, but does not transpose anndata"""
+    from sklearn.utils import check_random_state
+    si = adata.uns[use_rep]["bin_info"]
+    params = {"method": "umap",
+              "random_state": random_state,
+              "metric": "custom",
+              "module": use_rep,
+              "use_rep": adata.uns[use_rep]["rep"]}
+    if "batch_key" in adata.uns[use_rep].keys():
+        knn_indices, knn_dists = neighbors_batch(adata,
+                                                 use_rep=use_rep,
+                                                 n_neighbors=n_neighbors,
+                                                 min_std=min_std,
+                                                 random_state=check_random_state(random_state),
+                                                 verbose=verbose)
     else:
-        conns_key = key_added + '_connectivities'
-        dists_key = key_added + '_distances'
+        knn_indices, knn_dists = _neighbors_full(adata,
+                                                 use_rep=use_rep,
+                                                 n_neighbors=n_neighbors,
+                                                 min_std=min_std,
+                                                 random_state=check_random_state(random_state),
+                                                 verbose=verbose)
+    distances, connectivities = compute_connectivities_umap(knn_indices, knn_dists,
+                                                            knn_indices.shape[0],
+                                                            knn_indices.shape[1],
+                                                            set_op_mix_ratio=set_op_mix_ratio,
+                                                            local_connectivity=local_connectivity)
+    params["n_neighbors"] = knn_indices.shape[1]
+    if key_added is None:
+        key_added = "neighbors"
+        conns_key = "connectivities"
+        dists_key = "distances"
+    else:
+        conns_key = key_added + "_connectivities"
+        dists_key = key_added + "_distances"
     adata.uns[key_added] = {}
     neighbors_dict = adata.uns[key_added]
-    neighbors_dict['connectivities_key'] = conns_key
-    neighbors_dict['distances_key'] = dists_key
-    neighbors_dict['params'] = {'n_neighbors': n_neighbors, 'method': "umap"}
-    neighbors_dict['params']['random_state'] = random_state
-    neighbors_dict['params']['metric'] = "custom"
-    neighbors_dict['params']['metric_kwds'] = metric_kwds
-    neighbors_dict['params']['use_rep'] = rep
+    neighbors_dict["connectivities_key"] = conns_key
+    neighbors_dict["distances_key"] = dists_key
+    neighbors_dict["params"] = params
     adata.varp[dists_key] = distances
-    adata.varp[conns_key] = connectivities.tocsr()
+    adata.varp[conns_key] = connectivities

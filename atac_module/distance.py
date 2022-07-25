@@ -7,14 +7,14 @@ import logging
 from numba import float64, types
 
 @numba.njit
-def distance(x, y, min_std=0.001, mids=None, mean_grid=None, std_grid=None):
+def distance(x, y, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_grid=None):
     """kwargs is .uns[key]"""
     dim = x.shape[0]
     result = np.zeros(1)
     mean = np.zeros(1)
     std = np.zeros(1)
-    ix = (np.abs(x[0] - mids)).argmin()
-    iy = (np.abs(y[0] - mids)).argmin()
+    ix = (np.abs(x[0] - mids_x)).argmin()
+    iy = (np.abs(y[0] - mids_y)).argmin()
     mean += mean_grid[ix, iy]
     std += std_grid[ix, iy]
     for i in range(1, dim):
