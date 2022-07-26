@@ -1,8 +1,28 @@
+"""
+Copyright (c) 2018 The Python Packaging Authority
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE."""
 
 from .distance import distance
 import warnings
 def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose):
-    """similar to get_graph in bbknn"""
+    """This function is derived from get_graph in bbknn (https://github.com/Teichlab/bbknn)"""
     import numpy as np
     from pynndescent import NNDescent
     si = adata.uns[use_rep]["bin_info"]
@@ -15,7 +35,7 @@ def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose)
         xmask = np.ravel(np.where(B.values == xbatch))
         for y, ybatch in enumerate(batches):
             metric_kwds = {"min_std": min_std}
-            if x < y:
+            if x <= y:
                 key = "%s %s" % (xbatch, ybatch)
                 metric_kwds["mids_x"] = si[key]["mids_x"]
                 metric_kwds["mids_y"] = si[key]["mids_y"]

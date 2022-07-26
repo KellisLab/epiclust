@@ -26,7 +26,7 @@ for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
 	am.extract_rep(adata, power=power, margin="log1p_total_counts")
 	am.fit_splines(adata, batch="feature_types")
-	am.neighbors(adata, key_added="pow_%.2f" % power, n_neighbors=10)
+	am.neighbors(adata, key_added="pow_%.2f" % power, n_neighbors=25) ### takes forever but worth it
 
 am.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=2, max_comm_size=1000)
 
@@ -45,3 +45,7 @@ pip install .
 - Handling repeated values in spline bins
 - Asymmetric splines for linking (or BBKNN??)
 - Integrated linking
+- Impact of parameters
+  - Normalization
+  - # of PCs
+  - Zero centering
