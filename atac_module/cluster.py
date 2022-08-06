@@ -13,23 +13,46 @@ def _gather_varp(adata, graph_name_list, graph="connectivities_key"):
         L[g] = conn
     return L
 
-def _filter_var(adata, conn, z=None, pct=0.0):
-    """Recall that distances are computed as np.exp(-z) to turn correlations into distances"""
+def _filter_var(adata, conn, z=2, pct=0.0, row_indices=None, col_indices=None):
+    """Recall that distances are computed as np.exp(-z) to turn correlations into distances
+"""
     import numpy as np
-    if z is None:
-        z = -np.log(adata.varp[conn].data).mean()
-    max_distance = np.exp(-z)
-    nn = (adata.varp[conn] > 0).sum(1)
-    M = nn - (adata.varp[conn] > max_distance).sum(1)
+    import scipy.stats
+    percentile = scipy.stats.norm.cdf(z)
+    percentile = min(percentile, 1-percentile)
+    X = adata.varp[conn]
+    if row_indices is not None:
+        X = X[row_indices, :]
+    if col_indices is not None:
+        X = X[:, col_indices]
+    max_distance = np.quantile(X.data, percentile)
+    nn = (X > 0).sum(1)
+    M = nn - (X > max_distance).sum(1)
     ### what percentage of nearest neighbors for each .var are close enough?
     I, _ = np.where(M > (nn.max() * pct))
-    return I
+    if row_indices is not None:
+        return row_indices[I]
+    else:
+        return I
 
-def filter_var(adata, graph_name_list, z=None, pct=0.0):
+def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="scm"):
+    """TODO: detect batches"""
     from functools import reduce
     import numpy as np
     G = _gather_varp(adata, graph_name_list, graph="distances_key")
-    I = [_filter_var(adata, conn, z, pct) for conn in G.values()]
+    I = []
+    if "batch_key" in adata.uns[use_rep].keys():
+        ub, binv = np.unique(adata.var[adata.uns[use_rep]["batch_key"]], return_inverse=True)
+        for i, _ in enumerate(ub):
+            R = np.ravel(np.where(binv == i))
+            for j, _ in enumerate(ub):
+                C = np.ravel(np.where(binv == j))
+                I += [_filter_var(adata, conn, z, pct,
+                                  row_indices=R,
+                                  col_indices=C) for conn in G.values()]
+        ### add row-indices and col_indices for each batch pair and add to I list
+    else:
+        I = [_filter_var(adata, conn, z, pct) for conn in G.values()]
     return adata.var.index.values[reduce(np.union1d, I)]
 
 def infomap(adata, graph_name_list, key_added="infomap", prefix="M", **kwargs):
