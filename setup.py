@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import setuptools
-setuptools.setup(name="atac_module",
+setuptools.setup(name="epiclust",
                  version="0.1.0",
                  author="Benjamin James",
                  author_email="benjames@mit.edu",
-                 url="https://github.com/KellisLab/atac_module",
+                 url="https://github.com/KellisLab/epiclust",
                  license="GPL",
                  install_requires=[
                      "numpy",
@@ -28,5 +28,5 @@ setuptools.setup(name="atac_module",
                  ],
                  packages=setuptools.find_packages("."),
                  test_suite="test",
-                 # scripts=["scripts/atac_module_compute_cor.py"],
+                 scripts=["scripts/epiclust_aggregate.py", "scripts/epiclust_gene_estimation.py"],
                  )

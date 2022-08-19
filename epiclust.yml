@@ -1,8 +1,8 @@
-### Anaconda environment for atac modules
+### Anaconda environment for epiclust
 ### To install,
 ###    conda env create --file=atac_module.yml
 
-name: atac_module
+name: epiclust
 
 channels:
   - conda-forge

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import atac_module.gene_estimation as ge
+import epiclust.gene_estimation as ge
 import argparse
 
 if __name__ == "__main__":
