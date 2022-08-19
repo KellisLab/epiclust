@@ -1,16 +1,16 @@
 
-def df_to_pyranges(var, chrom="chrom", pos="loc", margin=0, name="name", left=None, right=None):
+def df_to_pyranges(var, chrom="chrom", pos="loc", margin=0, name="name", left=None, right=None, **kwargs):
     import pyranges
+    tbl = {k: var[v].values for k, v in kwargs.items()}
+    tbl["Chromosome"] = var[chrom].values
+    tbl[name] = var.index.values
     if left is not None and right is not None:
-        return pyranges.from_dict({"Chromosome": var[chrom].values,
-                                       "Start": var[left].values - margin,
-                                       "End": var[right].values + margin,
-                                       name: var.index.values})
+        tbl["Start"] = var[left].values - margin
+        tbl["End"] = var[right].values + margin
     else:
-        return pyranges.from_dict({"Chromosome": var[chrom].values,
-                                   "Start": var[pos].values - margin,
-                                   "End": var[pos].values + margin,
-                                   name: var.index.values})
+        tbl["Start"] = var[pos].values - margin
+        tbl["End"] = var[pos].values + margin
+    return pyranges.from_dict(tbl)
 
 def peak_names_to_var(peak_names, chrom="seqname", mid="loc", left="start", right="end"):
     import numpy as np
