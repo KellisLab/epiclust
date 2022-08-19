@@ -1,6 +1,15 @@
-* ATAC modules
+* EpiClust
 scmodule code [[https://github.com/KellisLab/scmodule][adapted]] for ATAC-seq, multiomics, and peak-gene linking
 
+** To install
+You may need to create a CONDA environment as specified in [[epiclust.yml]].
+
+After dependencies are met, this sequence of commands installs the library.
+#+BEGIN_SRC bash
+git clone git@github.com:KellisLab/epiclust.git
+cd epiclust
+python3 setup.py build && pip install .
+#+END_SRC
 ** Preprocessing
 Make sure your peaks are in an AnnData (H5AD) file.
 
@@ -34,36 +43,27 @@ sc.pp.pca(adata, n_comps=100)
 ** multi-omic workflow (RECOMMENDED)
 Note that the n_neighbors parameter can be changed, as n_neighbors is the per-batch number of neighbors
 #+BEGIN_SRC python
-import atac_module as am
+import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
-	am.extract_rep(adata, power=power, margin="log1p_total_counts")
-	am.fit_splines(adata, batch="feature_types")
-	am.neighbors(adata, key_added="pow_%.2f" % power, n_neighbors=25) ### takes forever but worth it
+	ec.extract_rep(adata, power=power, margin="log1p_total_counts")
+	ec.fit_splines(adata, batch="feature_types")
+	ec.neighbors(adata, key_added="pow_%.2f" % power, n_neighbors=25) ### takes forever but worth it
 
-vidx = am.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
+vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
 adata = adata[:, vidx].copy()
-am.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
+ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
 #+END_SRC
 ** single-omic workflow (DEPRECATED)
 #+BEGIN_SRC python
-import atac_module as am
+import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
-	am.extract_rep(adata, power=power, margin="log1p_total_counts")
-	am.fit_splines(adata)
-	am.neighbors(adata, key_added="pow_%.2f" % power)
+	ec.extract_rep(adata, power=power, margin="log1p_total_counts")
+	ec.fit_splines(adata)
+	ec.neighbors(adata, key_added="pow_%.2f" % power)
 
-vidx = am.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
+vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
 adata = adata[:, vidx].copy()
-am.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
-#+END_SRC
-** to install
-You may need to create a CONDA environment as specified in [[atac_module.yml]].
-
-After dependencies are met, this sequence of commands installs the library.
-#+BEGIN_SRC bash
-git clone git@github.com:KellisLab/atac_module.git
-cd atac_module
-python3 setup.py build && pip install .
+ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
 #+END_SRC

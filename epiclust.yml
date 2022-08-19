@@ -1,6 +1,6 @@
 ### Anaconda environment for epiclust
 ### To install,
-###    conda env create --file=atac_module.yml
+###    conda env create --file=epiclust.yml
 
 name: epiclust
 
