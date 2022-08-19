@@ -14,10 +14,12 @@ So, for combining these,
 1. use TF-IDF (non-logTF) on peak matrix.
 2. scale TF-IDF to 10000 counts per cell.
 3. scale estimated gene matrix to 10000 counts per cell
-4. log1p
-4. [[https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.calculate_qc_metrics.html][scanpy.pp.calculate_qc_metrics]]
-4. PCA
-4. concatenate modalities [[https://anndata.readthedocs.io/en/latest/generated/anndata.concat.html][anndata.concat({"Gene Accessibility": est, "Peaks": peaks}, axis=1, label="feature_types", merge="same")]]
+4. (optional) scale gene expression matrix to 10000 counts per cell
+5. concatenate modalities [[https://anndata.readthedocs.io/en/latest/generated/anndata.concat.html][anndata.concat({"Gene Accessibility": est, "Peaks": peaks, ...}, axis=1, label="feature_types", merge="same")]]
+6. log1p
+7. [[https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.calculate_qc_metrics.html][scanpy.pp.calculate_qc_metrics]]
+8. PCA
+
 5. use multi-omic workflow
 ** single-omic workflow (DEPRECATED)
 #+BEGIN_SRC python
