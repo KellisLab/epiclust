@@ -47,7 +47,7 @@ import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
 	ec.extract_rep(adata, power=power, margin="log1p_total_counts")
-	ec.fit_splines(adata, batch="feature_types")
+	ec.fit(adata, batch="feature_types")
 	ec.neighbors(adata, key_added="pow_%.2f" % power, n_neighbors=25) ### takes forever but worth it
 
 vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
@@ -60,7 +60,7 @@ import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
 	ec.extract_rep(adata, power=power, margin="log1p_total_counts")
-	ec.fit_splines(adata)
+	ec.fit(adata)
 	ec.neighbors(adata, key_added="pow_%.2f" % power)
 
 vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
