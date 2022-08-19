@@ -10,17 +10,31 @@ so that the modules can be calculated without loading the data matrix into memor
 
 Using a Gene accessiblity matrix (e.g. as estimated by [[https://www.archrproject.com/bookdown/calculating-gene-scores-in-archr.html][ArchR]]) helps aggregate nearby peaks better than by alone.
 This helps even with multiomic ATAC+GEX: use pseudo triple-omic (Peaks, Gene Accessiblity, Gene Expression)
-So, for combining these,
-1. use TF-IDF (non-logTF) on peak matrix.
-2. scale TF-IDF to 10000 counts per cell.
-3. scale estimated gene matrix to 10000 counts per cell
-4. (optional) scale gene expression matrix to 10000 counts per cell
-5. concatenate modalities [[https://anndata.readthedocs.io/en/latest/generated/anndata.concat.html][anndata.concat({"Gene Accessibility": est, "Peaks": peaks, ...}, axis=1, label="feature_types", merge="same")]]
-6. log1p
-7. [[https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.calculate_qc_metrics.html][scanpy.pp.calculate_qc_metrics]]
-8. PCA
-
-5. use multi-omic workflow
+So, for combining these:
+#+BEGIN_SRC python
+from sklearn.feature_extraction.text import TfidfTransformer
+import anndata
+import scanpy as sc
+### Use TF-IDF (non-logTF) on peak matrix
+peaks.X = TfidfTransformer().fit_transform(peaks.X)
+### Normalize peak matrix to 10000 counts per cell to facilitate integration with gene accessibility
+sc.pp.normalize_total(peaks, target_sum=10000)
+### Normalize gene accessibility to 10000 counts per cell
+sc.pp.normalize_total(gacc, target_sum=10000)
+### Normalize gene expression (if multi-omic GEX+ATAC) to 10000 counts per cell
+sc.pp.normalize_total(gexp, target_sum=10000)
+### Concatenate modalities
+adata = anndata.concat({"Gene Accessibility": gacc,
+                        "Peaks": peaks,
+                        "Gene Expression": gexp},
+                       axis=1, label="feature_types", merge="same")
+### Log-scale
+sc.pp.log1p(adata)
+### Calculate QC metrics
+sc.pp.calculate_qc_metrics(adata, inplace=True, percent_top=[])
+### PCA
+sc.pp.pca(adata, n_comps=100)
+#+END_SRC
 ** single-omic workflow (DEPRECATED)
 #+BEGIN_SRC python
 import atac_module as am
