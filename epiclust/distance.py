@@ -26,7 +26,7 @@ def distance(x, y, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_
     out = np.exp(-1 * (np.arctanh(result) - mean) / std)
     return(out[0])
 
-def raw_correlation(adata, row, col, use_rep="X_scm", batch_size=10000):
+def raw_correlation(adata, row, col, use_rep="X_epiclust", batch_size=10000):
     ncor = min(len(row), len(col))
     cor = np.zeros(ncor)
     X = adata.varm[use_rep]

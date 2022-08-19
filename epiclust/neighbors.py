@@ -20,7 +20,7 @@ def _neighbors_full(adata, use_rep, n_neighbors, min_std, random_state, verbose)
                                                   verbose=verbose)
     return knn_indices, knn_dists
 
-def neighbors(adata, n_neighbors=15, key_added=None, use_rep="scm", min_std=0.001, random_state=0, verbose=False, set_op_mix_ratio=1.0, local_connectivity=1.0):
+def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std=0.001, random_state=0, verbose=False, set_op_mix_ratio=1.0, local_connectivity=1.0):
     """rip off of scipy nearest neighbors, but does not transpose anndata"""
     from sklearn.utils import check_random_state
     si = adata.uns[use_rep]["bin_info"]

@@ -1,6 +1,6 @@
 from .spline import build_spline, spline_grid_ordered
 
-def neighbors_dense(adata, use_rep="scm", spline_k=2, min_std=0.001, key_added="connectivities", n_neighbors=10, power=0.5):
+def neighbors_dense(adata, use_rep="epiclust", spline_k=2, min_std=0.001, key_added="connectivities", n_neighbors=10, power=0.5):
     import numpy as np
     import scipy.sparse
     mean_spl = build_spline(adata, key=use_rep, spline="mean", k=spline_k)

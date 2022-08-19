@@ -39,7 +39,7 @@ def _filter_var(adata, conn, z=2, pct=0.0, row_indices=None, col_indices=None):
     else:
         return I
 
-def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="scm"):
+def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="epiclust"):
     """TODO: detect batches"""
     from functools import reduce
     import numpy as np

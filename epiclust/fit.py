@@ -25,7 +25,7 @@ def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
         cps["mids_y"] = (y_edges[1:] + y_edges[:-1]) / 2.
         return cps
 
-def fit(adata, n_bins=50, key="scm",
+def fit(adata, n_bins=50, key="epiclust",
         batch=None,
         z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
         if key not in adata.uns or "rep" not in adata.uns[key]:
@@ -69,7 +69,7 @@ def fit(adata, n_bins=50, key="scm",
                                                        n_bins_sample=n_bins_sample,
                                                        blur=blur)
 
-def build_spline(adata, key="scm", spline="mean", k=2, split=None):
+def build_spline(adata, key="epiclust", spline="mean", k=2, split=None):
         """split can be for example feature_type for linking"""
         cps = adata.uns[key]["bin_info"]
         bin_mids = cps["mids"]

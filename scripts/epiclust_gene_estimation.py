@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import epiclust.gene_estimation as ge
+from epiclust.gtf import load_gtf
 import argparse
+import anndata
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

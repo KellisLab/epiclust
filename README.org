@@ -30,7 +30,7 @@ sc.pp.normalize_total(gexp, target_sum=10000)
 ### Concatenate modalities
 adata = anndata.concat({
   "Peaks": peaks,
-  "Gene Expression": gexp,
+  "Gene Expression": gexp, ### if multi-omic. else omit
   "Gene Accessibility": gacc
 }, axis=1, label="feature_types", merge="same")
 ### Rename accessibility genes if expression genes are already present
@@ -69,3 +69,11 @@ vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 
 adata = adata[:, vidx].copy()
 ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
 #+END_SRC
+* TODO wishlist
+1. rename scm in .uns to epiclust
+2. .leiden() without filtering giant matrix
+3. automatic .neighbors() key_added labels based on power
+4. recipes
+5. batched gene_estimation for lower memory footprint
+6. iterative expansion to rest of features
+7. centrality-based module naming

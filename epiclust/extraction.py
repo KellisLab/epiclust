@@ -16,7 +16,7 @@ def extract_pca(adata, n_pcs=None):
         return U, s, VT
 
 def extract_rep(adata, power=0.0, margin="log1p_total_counts",
-                key_added="scm", covariates=[], n_pcs=None, zero_center=True):
+                key_added="epiclust", covariates=[], n_pcs=None, zero_center=True):
     if margin not in adata.var.columns:
         print("Margin", margin, "not in adata.var")
         return -1
