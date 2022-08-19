@@ -12,7 +12,11 @@ def _gather_varp(adata, graph_name_list, graph="connectivities_key"):
             continue
         L[g] = conn
     return L
-
+def sparse_maximum(A, B):
+    import numpy as np
+    diff = A - B
+    diff.data = np.where(diff.data < 0, 1, 0)
+    return A - A.multiply(diff) + B.multiply(diff)
 def _filter_var(adata, conn, z=2, pct=0.0, row_indices=None, col_indices=None):
     """Recall that distances are computed as np.exp(-z) to turn correlations into distances
 """

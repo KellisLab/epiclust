@@ -7,6 +7,7 @@ from .perbin import create_bins_quantile, calc_perbin_stats
 
 
 def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
+        """where_x and where_y are for avoiding inter-indexing errors"""
         if where_x is not None:
                 where_x = np.ravel(where_x)
                 x_assign, x_edges = create_bins_quantile(margin[where_x], nbins=nbins)
@@ -37,17 +38,20 @@ def fit_splines(adata, n_bins=50, key="scm",
                 ub, binv = np.unique(adata.var[batch].values, return_inverse=True)
                 tbl = {}
                 for i, j in combinations_with_replacement(np.arange(len(ub)), 2):
+                        ### TODO filter i==, j== such that only fitting on filtered data
+                        ib = np.ravel(np.where(i == binv))
+                        jb = np.ravel(np.where(j == binv))
                         ### Use sqrt to ensure enough bins
                         nbins = np.min([n_bins,
-                                        int(np.sqrt(np.sum(i == binv))),
-                                        int(np.sqrt(np.sum(j == binv)))])
+                                        int(np.sqrt(len(ib))),
+                                        int(np.sqrt(len(jb)))])
                         if nbins < 10:
                                 print("Warning: Batches", ub[i], "and", ub[j], "have only", nbins, "bins")
                         cps = _fit_bins(X_adj=X_adj,
                                         margin=margin,
                                         nbins=nbins,
-                                        where_x=np.where(i == binv),
-                                        where_y=np.where(j == binv),
+                                        where_x=ib,
+                                        where_y=jb,
                                         z=z,
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample,
