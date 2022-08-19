@@ -3,7 +3,7 @@ from .extraction import extract_rep
 from .spline import fit_splines
 from .neighbors import neighbors
 from .cluster import filter_var, leiden, infomap
-from .genome import genomic_distance_weight
+from .gene_estimation import estimate_genes_linking
 __author__ = "Benjamin James"
 __credits__ = ["Benjamin James", "Carles Boix"]
 __license__ = "GPL"
