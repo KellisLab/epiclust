@@ -7,13 +7,12 @@ You may need to create a CONDA environment as specified in [[epiclust.yml]].
 After dependencies are met, this sequence of commands installs the library.
 #+BEGIN_SRC bash
 git clone git@github.com:KellisLab/epiclust.git
-cd epiclust
-python3 setup.py build && pip install .
+cd epiclust && pip install .
 #+END_SRC
 ** Preprocessing
 Make sure your peaks are in an AnnData (H5AD) file.
 
-Using a Gene accessiblity matrix (e.g. as estimated by [[https://www.archrproject.com/bookdown/calculating-gene-scores-in-archr.html][ArchR]]) helps aggregate nearby peaks better than by alone.
+Using a Gene accessiblity matrix (e.g. as estimated by [[file:scripts/epiclust_gene_estimation.py][epiclust_gene_estimation.py]]) helps aggregate nearby peaks better than by alone.
 This helps even with multiomic ATAC+GEX: use pseudo triple-omic (Peaks, Gene Accessiblity, Gene Expression)
 So, for combining these:
 #+BEGIN_SRC python
@@ -29,10 +28,13 @@ sc.pp.normalize_total(gacc, target_sum=10000)
 ### Normalize gene expression (if multi-omic GEX+ATAC) to 10000 counts per cell
 sc.pp.normalize_total(gexp, target_sum=10000)
 ### Concatenate modalities
-adata = anndata.concat({"Gene Accessibility": gacc,
-                        "Peaks": peaks,
-                        "Gene Expression": gexp},
-                       axis=1, label="feature_types", merge="same")
+adata = anndata.concat({
+  "Peaks": peaks,
+  "Gene Expression": gexp,
+  "Gene Accessibility": gacc
+}, axis=1, label="feature_types", merge="same")
+### Rename accessibility genes if expression genes are already present
+adata.var_names_make_unique("-GAcc-")
 ### Log-scale
 sc.pp.log1p(adata)
 ### Calculate QC metrics

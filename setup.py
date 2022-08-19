@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import setuptools
 setuptools.setup(name="epiclust",
-                 version="0.1.0",
+                 version="0.2.0",
                  author="Benjamin James",
                  author_email="benjames@mit.edu",
                  url="https://github.com/KellisLab/epiclust",
