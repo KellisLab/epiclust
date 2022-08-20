@@ -72,7 +72,7 @@ def adjust_covariates(adata, covariates, min_variance=1e-20, batch_size=10000):
         br = br / np.linalg.norm(br, axis=0, ord=2)[None, :]
         RR = br.T.dot(br) ### corr coef
         PR = np.zeros((adata.shape[1], br.shape[1]))
-        br = br - br.mean(0)[:, None]
+        br = br - br.mean(0)[None, :]
         for left in np.arange(0, adata.shape[1], batch_size):
                 right = min(left + batch_size, adata.shape[1])
                 if scipy.sparse.issparse(adata.X):
