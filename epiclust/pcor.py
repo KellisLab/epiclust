@@ -33,9 +33,9 @@ class PartialCor:
                         right = min(left + self.batch_size, len(cor))
                         IL = row[left:right]
                         IR = col[left:right]
-                        sub = np.einsum("ij,jk,ki->i", self.lfcor[IL, :], inv, self.rfcor[:, IR])
-                        denom_L = np.einsum("ij,jk,ki->i", self.lfcor[IL, :], inv, self.lfcor[IL, :].T)
-                        denom_R = np.einsum("ij,jk,ki->i", self.rfcor[:, IR].T, inv, self.rfcor[:, IR])
+                        sub = np.einsum("ij,jk,ki->i", self.lfcor[IL, :], self.ainv, self.rfcor[:, IR])
+                        denom_L = np.einsum("ij,jk,ki->i", self.lfcor[IL, :], self.ainv, self.lfcor[IL, :].T)
+                        denom_R = np.einsum("ij,jk,ki->i", self.rfcor[:, IR].T, self.ainv, self.rfcor[:, IR])
                         denom_square = np.clip((1 - denom_L) * (1 - denom_R), a_min=1e-20, a_max=np.inf)
                         one_over_det = denom_square - (cor[left:right] - sub)**2
                         out[left:right] = (cor[left:right] - sub)/np.sqrt(denom_square)
@@ -46,6 +46,7 @@ def adjust_covariates(adata, covariates, min_variance=1e-20, batch_size=10000):
         import numpy as np
         import pandas as pd
         from sklearn.decomposition import PCA
+        import scipy.sparse
         br = pd.get_dummies(adata.obs[covariates]).values
         br = br[:, np.std(br, axis=0) > 0] ### remove zero variance cols e.g. pd.Categorical not present in data
         ### first compute full rank PCA:
