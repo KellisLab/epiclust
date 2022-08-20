@@ -5,6 +5,7 @@ import scipy.interpolate
 from itertools import combinations_with_replacement
 from .perbin import create_bins_quantile, calc_perbin_stats
 from .pcor import adjust_covariates, extract_pcor_info
+from .extraction import extract_rep
 
 def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
         """where_x and where_y are for avoiding inter-indexing errors"""

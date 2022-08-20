@@ -1,10 +1,9 @@
 #from .perbin import calc_perbin_stats
-from .extraction import extract_rep
 from .fit import fit
 from .neighbors import neighbors
 from .cluster import filter_var, leiden, infomap
 from .gene_estimation import estimate_genes_linking
-from .pcor import adjust_covariates
+from .linking import linking
 
 __author__ = "Benjamin James"
 __credits__ = ["Benjamin James", "Carles Boix"]
