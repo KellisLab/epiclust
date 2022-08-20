@@ -25,13 +25,13 @@ def pseudobulk(pbdf, adata, columns=["leiden", "Sample"], obsm=None, varm=None):
         X = S.dot(adata.X)
         dtype = adata.X.dtype
     obs = pd.DataFrame(index=ucls)
-    for x in np.setdiff1d(integ_df.columns, col):
+    for x in np.setdiff1d(pbdf.columns, col):
         for i, cls in enumerate(ucls):
-            allval = integ_df[x].values[i == cls_inv]
+            allval = pbdf[x].values[i == cls_inv]
             if not np.all(allval == allval[0]):
                 break
         else:
-            obs[x] = integ_df[x].values[cls_idx]
+            obs[x] = pbdf[x].values[cls_idx]
     return anndata.AnnData(X, dtype=dtype,
                            obs=obs,
                            var=adata.var)
