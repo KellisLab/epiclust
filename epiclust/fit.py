@@ -4,7 +4,7 @@ import scipy.sparse
 import scipy.interpolate
 from itertools import combinations_with_replacement
 from .perbin import create_bins_quantile, calc_perbin_stats
-
+from .pcor import adjust_covariates, extract_pcor_info
 
 def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
         """where_x and where_y are for avoiding inter-indexing errors"""
@@ -26,7 +26,7 @@ def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
         return cps
 
 def fit(adata, n_bins=50, key="epiclust",
-        batch=None,
+        batch=None, covariates=None,
         z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
         if key not in adata.uns or "rep" not in adata.uns[key]:
                 print("Run extract_module first")
@@ -34,6 +34,7 @@ def fit(adata, n_bins=50, key="epiclust",
         X_adj = adata.varm[adata.uns[key]["rep"]]
         margin = X_adj[:, 0]
         X_adj = X_adj[:, 1:]
+        adjust_covariates(adata, covariates, key=key)
         if batch is not None and batch in adata.var.columns:
                 ub, binv = np.unique(adata.var[batch].values, return_inverse=True)
                 tbl = {}
@@ -55,7 +56,7 @@ def fit(adata, n_bins=50, key="epiclust",
                                         z=z,
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample,
-                                        blur=blur)
+                                        blur=blur, **extract_pcor_info(adata, key=key))
                         tbl["%s %s" % (ub[i], ub[j])] = cps
                 adata.uns[key]["bin_info"] = tbl
                 adata.uns[key]["batches"] = ub
@@ -67,7 +68,7 @@ def fit(adata, n_bins=50, key="epiclust",
                                                        z=z,
                                                        margin_of_error=margin_of_error,
                                                        n_bins_sample=n_bins_sample,
-                                                       blur=blur)
+                                                       blur=blur, **extract_pcor_info(adata, key=key))
 
 def build_spline(adata, key="epiclust", spline="mean", k=2, split=None):
         """split can be for example feature_type for linking"""

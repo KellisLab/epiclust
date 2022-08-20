@@ -70,7 +70,7 @@ adata = adata[:, vidx].copy()
 ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
 #+END_SRC
 * TODO wishlist
-1. rename scm in .uns to epiclust
+1. use pcor for modules: see if VARM clusters by spline info
 2. .leiden() without filtering giant matrix
 3. automatic .neighbors() key_added labels based on power
 4. recipes
