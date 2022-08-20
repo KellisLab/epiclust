@@ -4,19 +4,27 @@ import anndata
 import numpy as np
 import pandas as pd
 import scipy.sparse
-
+from epiclust.gene_distance import peak_names_to_var
 import argparse
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--input", required=True)
-    ap.add_argument("-o", "--output")
+    ap.add_argument("-o", "--output", required=True)
+    ap.add_argument("-b", "--bed", default="")
     ap.add_argument("-c", "--column", default="leiden")
     ap.add_argument("-f", "--feature-types", nargs="+", default=["Peaks"])
     ap.add_argument("-g", "--groupby", default="leiden")
+    ap.add_argument("--min-size", type=int, default=10)
     args = vars(ap.parse_args())
     adata = sc.read(args["input"], backed="r")
     adata = adata[:, adata.var["feature_types"].isin(args["feature_types"])].to_memory()
+    uc, cnt = np.unique(adata.var["leiden"].values, return_counts=True)
+    adata = adata[:, adata.var["leiden"].isin(uc[cnt >= args["min_size"]])].copy()
+    if args["bed"]:
+        V = peak_names_to_var(adata.var.index.values)
+        V["leiden"] = adata.var.loc[V.index.values, "leiden"]
+        V.loc[:, ["seqname", "start", "end", "leiden"]].to_csv(args["bed"], sep="\t", index=False, header=False)
     uc, cinv = np.unique(adata.var["leiden"].values, return_inverse=True)
     S = scipy.sparse.csr_matrix((np.ones(adata.shape[1]),
                                  (np.arange(adata.shape[1]),
