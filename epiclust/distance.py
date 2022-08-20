@@ -13,8 +13,8 @@ def distance(x, y, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_
     result = np.zeros(1)
     mean = np.zeros(1)
     std = np.zeros(1)
-    ix = (np.abs(x[0] - mids_x)).argmin()
-    iy = (np.abs(y[0] - mids_y)).argmin()
+    ix = np.argmin(np.abs(x[0] - mids_x))
+    iy = np.argmin(np.abs(y[0] - mids_y))
     mean += mean_grid[ix, iy]
     std += std_grid[ix, iy]
     for i in range(1, dim):
@@ -36,8 +36,8 @@ def correlation(X_rep, I_row, I_col, min_std=0.001, mids_x=None, mids_y=None, me
     mean = np.zeros(ncor)
     std = np.zeros(ncor)
     for i in range(ncor):
-        ix = (np.abs(X_rep[I_row[i], 0] - mids_x)).argmin()
-        iy = (np.abs(X_rep[I_col[i], 0] - mids_y)).argmin()
+        ix = np.argmin(np.abs(X_rep[I_row[i], 0] - mids_x))
+        iy = np.argmin(np.abs(X_rep[I_col[i], 0] - mids_y))
         mean[i] = mean_grid[ix, iy]
         std[i] = std_grid[ix, iy]
         for j in range(1, dim):
