@@ -5,11 +5,11 @@ def pseudobulk(pbdf, adata, columns=["leiden", "Sample"], obsm=None, varm=None):
     import pandas as pd
     import anndata
     import scipy.sparse
-    I = np.intersect1d(pbdf.values, adata.obs.index.values)
+    I = np.intersect1d(pbdf.index.values, adata.obs.index.values)
     pbdf = pbdf.loc[I, :]
     cls_idx = pbdf.groupby(columns).ngroup()
     ucls, cls_idx, cls_inv = np.unique(cls_idx, return_index=True, return_inverse=True)
-    adata_inv = np.ravel(np.where(np.isin(adata.obs.index.values, I)))
+    adata_inv = adata.obs.index.get_indexer(I)
     S = scipy.sparse.csr_matrix((np.ones(len(cls_inv)),
                                  (cls_inv, adata_inv)), dtype=int,
                                 shape=(len(ucls), adata.shape[1]))
