@@ -48,21 +48,19 @@ Note that the n_neighbors parameter can be changed, as n_neighbors is the per-ba
 import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
-	ec.extract_rep(adata, power=power, margin="log1p_total_counts")
-	ec.fit(adata, batch="feature_types")
+	ec.fit(adata, power=power, margin="log1p_total_counts", batch="feature_types")
 	ec.neighbors(adata, key_added="pow_%.2f" % power, n_neighbors=25) ### takes forever but worth it
 
 vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
 adata = adata[:, vidx].copy()
 ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
 #+END_SRC
-** single-omic workflow (DEPRECATED)
+** single-omic workflow (DEPRECATED except for RNA-seq)
 #+BEGIN_SRC python
 import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
-	ec.extract_rep(adata, power=power, margin="log1p_total_counts")
-	ec.fit(adata)
+	ec.fit(adata, power=power, margin="log1p_total_counts")
 	ec.neighbors(adata, key_added="pow_%.2f" % power)
 
 vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])

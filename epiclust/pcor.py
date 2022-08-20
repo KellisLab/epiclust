@@ -21,8 +21,11 @@ def adjust_covariates(adata, covariates=None, min_variance=1e-20, batch_size=500
         from sklearn.decomposition import PCA
         from sklearn.preprocessing import StandardScaler
         import scipy.sparse
-        if covariates is None:
-                return 0
+        if not isinstance(covariates, list):
+                if covariates is None:
+                        return 0
+                else:
+                        covariates = [covariates]
         br = pd.get_dummies(adata.obs[covariates]).values
         br = br[:, np.std(br, axis=0) > 0] ### remove zero variance cols e.g. pd.Categorical not present in data
         ### then Z-scale for vars. like age
@@ -50,7 +53,7 @@ def adjust_covariates(adata, covariates=None, min_variance=1e-20, batch_size=500
                 adata.varm[prkey] = PR[:, None]
         else:
                 adata.varm[prkey] = PR
-        adata.uns[key]["adjust"] = {"varm": prkey, "inv": np.linalg.pinv(RR)}
+        adata.uns[key]["adjust"] = {"varm": prkey, "inv": np.linalg.pinv(RR), "covariates": covariates}
         return adata
 
 def extract_pcor_info(adata, key="epiclust"):

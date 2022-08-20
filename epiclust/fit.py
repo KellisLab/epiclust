@@ -25,12 +25,12 @@ def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
         cps["mids_y"] = (y_edges[1:] + y_edges[:-1]) / 2.
         return cps
 
-def fit(adata, n_bins=50, key="epiclust",
-        batch=None, covariates=None,
+def fit(adata, power=0, batch=None, covariates=None,
+        margin="log1p_total_counts", n_bins=50, key="epiclust",
+        n_pcs=None, zero_center=True,
         z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
-        if key not in adata.uns or "rep" not in adata.uns[key]:
-                print("Run extract_module first")
-                return -1
+        assert 0 == extract_rep(adata, power=power, margin=margin,
+                                key_added=key, n_pcs=n_pcs, zero_center=zero_center)
         X_adj = adata.varm[adata.uns[key]["rep"]]
         margin = X_adj[:, 0]
         X_adj = X_adj[:, 1:]
