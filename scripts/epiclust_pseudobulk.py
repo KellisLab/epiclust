@@ -28,7 +28,7 @@ if __name__ == "__main__":
         S = [s.strip() for s in kv.split("=")]
         if len(S) == 2:
             data_list[S[0]] = anndata.read(S[1], backed="r")
-            data_keys.add(S[0])
+            data_keys.append(S[0])
         else:
             print(S, "is not a valid key-value pair")
             sys.exit(1)
