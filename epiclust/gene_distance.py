@@ -15,6 +15,7 @@ def df_to_pyranges(var, chrom="chrom", pos="loc", margin=0, name="name", left=No
 def peak_names_to_var(peak_names, chrom="seqname", mid="loc", left="start", right="end"):
     import numpy as np
     import pandas as pd
+    peak_names = peak_names[pd.Series(peak_names).str.match(r"^[^:]+:[0-9]+-[0-9]+$")]
     chrom_vals = np.asarray([x.split(":")[0] for x in peak_names])
     left_vals = np.asarray([int(x.split(":")[1].split("-")[0]) for x in peak_names])
     right_vals = np.asarray([int(x.split(":")[1].split("-")[1]) for x in peak_names])
@@ -27,6 +28,7 @@ def peak_names_to_var(peak_names, chrom="seqname", mid="loc", left="start", righ
     return df
 
 def distance_weight_all(enh, gene, max_distance=1000*1000, chrom="seqname", gene_loc="tss"):
+    """enh from peak_names_to_var, gene from load_gtf().loc[genes,:]"""
     import numpy as np
     import pandas as pd
     er = df_to_pyranges(enh, name="peak", pos="loc", chrom=chrom)

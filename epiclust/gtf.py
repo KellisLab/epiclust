@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-def load_gtf(gtf, max_score=5, min_score=1, peaks=None):
+def load_gtf(gtf, max_score=5, min_score=1):
     import pandas as pd
     import gtfparse
     import anndata
@@ -19,4 +19,3 @@ def load_gtf(gtf, max_score=5, min_score=1, peaks=None):
     raw_score = (diff - np.min(diff))/(np.max(diff) - np.min(diff))
     gtf["gene_length_score"] = (max_score - min_score) * raw_score + min_score
     return gtf
-

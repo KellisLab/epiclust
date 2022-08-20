@@ -3,12 +3,13 @@ from .distance import distance
 from .neighbors_util import compute_connectivities_umap
 from .neighbors_batch import neighbors_batch
 
-def _neighbors_full(adata, use_rep, n_neighbors, min_std, random_state, verbose):
+def _neighbors_full(adata, use_rep, n_neighbors, min_std, random_state, verbose, squared_correlation=False):
     from umap.umap_ import nearest_neighbors
     si = adata.uns[use_rep]["bin_info"]
     metric_kwds = {"min_std": min_std,
                    "mids_x": si["mids_x"], "mids_y": si["mids_y"],
-                   "mean_grid": si["mean"], "std_grid": si["std"]}
+                   "mean_grid": si["mean"], "std_grid": si["std"],
+                   "squared_correlation": squared_correlation}
     rep = adata.uns[use_rep]["rep"]
     X = adata.varm[rep]
     knn_indices, knn_dists, _ = nearest_neighbors(X,
@@ -35,14 +36,16 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std
                                                  n_neighbors=n_neighbors,
                                                  min_std=min_std,
                                                  random_state=check_random_state(random_state),
-                                                 verbose=verbose)
+                                                 verbose=verbose,
+                                                 squared_correlation=adata.uns[use_rep]["squared_correlation"])
     else:
         knn_indices, knn_dists = _neighbors_full(adata,
                                                  use_rep=use_rep,
                                                  n_neighbors=n_neighbors,
                                                  min_std=min_std,
                                                  random_state=check_random_state(random_state),
-                                                 verbose=verbose)
+                                                 verbose=verbose,
+                                                 squared_correlation=adata.uns[use_rep]["squared_correlation"])
     distances, connectivities = compute_connectivities_umap(knn_indices, knn_dists,
                                                             knn_indices.shape[0],
                                                             knn_indices.shape[1],

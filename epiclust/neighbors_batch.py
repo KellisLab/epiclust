@@ -21,7 +21,7 @@ SOFTWARE."""
 
 from .distance import distance
 import warnings
-def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose):
+def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose, squared_correlation=False):
     """This function is derived from get_graph in bbknn (https://github.com/Teichlab/bbknn)"""
     import numpy as np
     from pynndescent import NNDescent
@@ -34,7 +34,7 @@ def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose)
     for x, xbatch in enumerate(batches):
         xmask = np.ravel(np.where(B.values == xbatch))
         for y, ybatch in enumerate(batches):
-            metric_kwds = {"min_std": min_std}
+            metric_kwds = {"min_std": min_std, "squared_correlation": squared_correlation}
             if x <= y:
                 key = "%s %s" % (xbatch, ybatch)
                 metric_kwds["mids_x"] = si[key]["mids_x"]

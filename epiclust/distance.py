@@ -7,7 +7,7 @@ import logging
 from .pcor import pcor_adjust
 
 @numba.njit
-def distance(x, y, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_grid=None):
+def distance(x, y, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_grid=None, squared_correlation=False):
     """kwargs is .uns[key]"""
     dim = x.shape[0]
     result = np.zeros(1)
@@ -21,13 +21,15 @@ def distance(x, y, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_
         dot = x[i] * y[i]
         result += dot
     std[std < min_std] = min_std
+    if squared_correlation:
+        result *= result
     result[result < -1+1e-16] = -1+1e-16
     result[result > 1-1e-16] = 1-1e-16
     out = np.exp(-1 * (np.arctanh(result) - mean) / std)
     return(out[0])
 
 @numba.njit
-def correlation(X_rep, I_row, I_col, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_grid=None, pcor_inv=None, pcor_varm=None):
+def correlation(X_rep, I_row, I_col, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_grid=None, pcor_inv=None, pcor_varm=None, squared_correlation=False):
     ncor = min(len(I_row), len(I_col))
     dim = X_rep.shape[1]
     result = np.zeros(ncor)
@@ -44,6 +46,8 @@ def correlation(X_rep, I_row, I_col, min_std=0.001, mids_x=None, mids_y=None, me
     ### apply pcor if applicable
     if pcor_inv is not None and pcor_varm is not None:
         result = pcor_adjust(result, row=I_row, col=I_col, varm=pcor_varm, inv=pcor_inv)
+    if squared_correlation:
+        result *= result
     result[result < -1+1e-16] = -1+1e-16
     result[result > 1-1e-16] = 1-1e-16
     return (np.arctanh(result) - mean) / std

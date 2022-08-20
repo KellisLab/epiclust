@@ -28,10 +28,11 @@ def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
 
 def fit(adata, power=0, batch=None, covariates=None,
         margin="log1p_total_counts", n_bins=50, key="epiclust",
-        n_pcs=None, zero_center=True,
+        n_pcs=None, zero_center=True, squared_correlation=False,
         z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
         assert 0 == extract_rep(adata, power=power, margin=margin,
                                 key_added=key, n_pcs=n_pcs, zero_center=zero_center)
+        adata.uns[key]["squared_correlation"] = squared_correlation
         X_adj = adata.varm[adata.uns[key]["rep"]]
         margin = X_adj[:, 0]
         X_adj = X_adj[:, 1:]
@@ -57,7 +58,9 @@ def fit(adata, power=0, batch=None, covariates=None,
                                         z=z,
                                         margin_of_error=margin_of_error,
                                         n_bins_sample=n_bins_sample,
-                                        blur=blur, **extract_pcor_info(adata, key=key))
+                                        blur=blur,
+                                        squared_correlation=squared_correlation,
+                                        **extract_pcor_info(adata, key=key))
                         tbl["%s %s" % (ub[i], ub[j])] = cps
                 adata.uns[key]["bin_info"] = tbl
                 adata.uns[key]["batches"] = ub
@@ -69,7 +72,9 @@ def fit(adata, power=0, batch=None, covariates=None,
                                                        z=z,
                                                        margin_of_error=margin_of_error,
                                                        n_bins_sample=n_bins_sample,
-                                                       blur=blur, **extract_pcor_info(adata, key=key))
+                                                       blur=blur,
+                                                       squared_correlation=squared_correlation,
+                                                       **extract_pcor_info(adata, key=key))
 
 def build_spline(adata, key="epiclust", spline="mean", k=2, split=None):
         """split can be for example feature_type for linking"""

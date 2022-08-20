@@ -6,7 +6,9 @@ def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
     import numpy as np
     import pandas as pd
     si = adata.uns[key]["bin_info"]
-    params = {"min_std": min_std, **extract_pcor_info(adata, key=key)}
+    params = {"min_std": min_std,
+              "squared_correlation": adata.uns[key]["squared_correlation"],
+              **extract_pcor_info(adata, key=key)}
     df = pd.DataFrame({"from": adata.var.index.get_indexer(var_from_names),
                        "to": adata.var.index.get_indexer(var_to_names)})
     out = np.zeros(df.shape[0])
