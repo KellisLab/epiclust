@@ -12,7 +12,7 @@ def pseudobulk(pbdf, adata, columns=["leiden", "Sample"], obsm=None, varm=None):
     adata_inv = adata.obs.index.get_indexer(I)
     S = scipy.sparse.csr_matrix((np.ones(len(cls_inv)),
                                  (cls_inv, adata_inv)), dtype=int,
-                                shape=(len(ucls), adata.shape[1]))
+                                shape=(len(ucls), adata.shape[0]))
     dtype = np.int
     if obsm in adata.obsm.keys() and varm in adata.varm.keys():
         X = S.dot(adata.obsm[obsm]).dot(adata.varm[varm].T)
