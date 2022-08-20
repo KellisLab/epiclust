@@ -1,22 +1,7 @@
 
-import numpy as np
-import pandas as pd
-from sklearn.decomposition import PCA
-import scipy.sparse
-
-def adjust_partial_cor(mat, L, R, inv):
-        """formula: sub = L INV R^T
-        f"""
-        sub = L @ inv @ R
-        denom_row = np.einsum("ij,jk,ki->i", L, inv, L.T)
-        denom_col = np.einsum("ij,jk,ki->i", R.T, inv, R)
-        denom_square = np.multiply.outer(1-denom_row, 1-denom_col)
-        denom_square = np.clip(denom_square, a_min=1e-20, a_max=np.inf)
-        one_over_det = denom_square - np.multiply(mat - sub, mat - sub)
-        return np.sign(one_over_det) * (mat - sub)/np.sqrt(denom_square)
-
 class PartialCor:
         def __init__(self, feat_cor_mat_L, self_cor_mat, feat_cor_mat_R, batch_size=5000):
+                import numpy as np
                 if len(np.shape(feat_cor_mat_L)) == 1:
                         self.lfcor = feat_cor_mat_L[:, None]
                 else:
@@ -34,29 +19,28 @@ class PartialCor:
                 #         self_cor_mat = nearPD(self_cor_mat)
                 self.ainv = np.linalg.inv(self_cor_mat)
                 self.batch_size = batch_size
-        def __call__(self, mat, row=None, col=None, eps=1e-16):
-                if row is None:
-                        row = np.arange(mat.shape[0])
-                if col is None:
-                        col = np.arange(mat.shape[1])
-                assert len(row) == mat.shape[0]
-                assert len(col) == mat.shape[1]
-                out = np.zeros_like(mat)
-                for rbegin in range(0, len(row), self.batch_size):
-                        rend = min(rbegin + self.batch_size, len(row))
-                        MR = mat[rbegin:rend, :]
-                        L = self.lfcor[row[rbegin:rend], :]
-                        for cbegin in range(0, len(col), self.batch_size):
-                                cend = min(cbegin + self.batch_size, len(col))
-                                MRC = MR[:, cbegin:cend]
-                                if scipy.sparse.issparse(MRC):
-                                        MRC = MRC.todense()
-                                R = self.rfcor[:, col[cbegin:cend]]
-                                out[rbegin:rend, cbegin:cend] = adjust_partial_cor(np.tanh(np.asarray(MRC)),
-                                                                                   L=L, R=R,
-                                                                                   inv=self.ainv)
-                out = np.arctanh(np.clip(out, a_min=-1+eps, a_max=1-eps))
-                return (out + mat)/2 ## average
+        def __call__(self, cor, row, col, eps=1e-16):
+                """partial cor formula from stored correlations:
+                (PP - RP_i^T (RR^{-1}) RP_j) / sqrt((1 - RP_i^T RR^{-1} RP_i) * (1 - RP_i^T RR^{-1} RP_i))
+                but RP is lfcor and rfcor in case of asymmetry
+                """
+                import numpy as np
+                cor = np.ravel(cor).astype(np.float64)
+                assert len(cor) == len(row)
+                assert len(cor) == len(col)
+                out = np.zeros_like(cor)
+                for left in np.arange(0, len(cor), self.batch_size):
+                        right = min(left + self.batch_size, len(cor))
+                        IL = row[left:right]
+                        IR = col[left:right]
+                        sub = np.einsum("ij,jk,ki->i", self.lfcor[IL, :], inv, self.rfcor[:, IR])
+                        denom_L = np.einsum("ij,jk,ki->i", self.lfcor[IL, :], inv, self.lfcor[IL, :].T)
+                        denom_R = np.einsum("ij,jk,ki->i", self.rfcor[:, IR].T, inv, self.rfcor[:, IR])
+                        denom_square = np.clip((1 - denom_L) * (1 - denom_R), a_min=1e-20, a_max=np.inf)
+                        one_over_det = denom_square - (cor[left:right] - sub)**2
+                        out[left:right] = (cor[left:right] - sub)/np.sqrt(denom_square)
+                        out[left:right] *= np.sign(one_over_det)
+                return out
 
 def adjust_covariates(adata, covariates, min_variance=1e-20, batch_size=10000):
         import numpy as np

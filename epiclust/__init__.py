@@ -4,6 +4,8 @@ from .fit import fit
 from .neighbors import neighbors
 from .cluster import filter_var, leiden, infomap
 from .gene_estimation import estimate_genes_linking
+from .pcor import adjust_covariates
+
 __author__ = "Benjamin James"
 __credits__ = ["Benjamin James", "Carles Boix"]
 __license__ = "GPL"
