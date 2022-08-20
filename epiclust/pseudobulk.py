@@ -25,7 +25,7 @@ def pseudobulk(pbdf, adata, columns=["leiden", "Sample"], obsm=None, varm=None):
         X = S.dot(adata.X)
         dtype = adata.X.dtype
     obs = pd.DataFrame(index=ucls)
-    for x in np.setdiff1d(pbdf.columns, col):
+    for x in np.setdiff1d(pbdf.columns, columns):
         for i, cls in enumerate(ucls):
             allval = pbdf[x].values[i == cls_inv]
             if not np.all(allval == allval[0]):
