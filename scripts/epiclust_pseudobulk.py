@@ -46,7 +46,7 @@ if __name__ == "__main__":
     adata.var_names_make_unique("-ft-")
     sc.pp.log1p(adata)
     sc.pp.calculate_qc_metrics(adata, inplace=True, percent_top=[])
-    sc.pp.pca(adata, n_comps=args["n_comps"])
+    sc.pp.pca(adata, n_comps=min(np.min(adata.shape)-1, args["n_comps"]))
     if os.path.exists(args["gtf_annotation"]):
         peaks = df_to_pyranges(peak_names_to_var(adata.var.index.values), chrom="seqname", left="start", right="end")
         ft = adata.var["feature_types"].values.astype(str)
