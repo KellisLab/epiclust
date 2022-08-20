@@ -37,6 +37,5 @@ def extract_rep(adata, power=0.0, margin="log1p_total_counts",
     adata.uns[key_added] = {"rep": rep,
                             "margin": margin,
                             "power": power,
-                            "zero_center": zero_center,
-                            "covariates": covariates}
+                            "zero_center": zero_center}
     return 0
