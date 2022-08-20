@@ -1,5 +1,10 @@
 
 def pseudobulk(pbdf, adata, columns=["leiden", "Sample"], obsm=None, varm=None):
+    """TODO ensure ALL pbdf columns are met"""
+    import numpy as np
+    import pandas as pd
+    import anndata
+    import scipy.sparse
     I = np.intersect1d(pbdf.values, adata.obs.index.values)
     pbdf = pbdf.loc[I, :]
     cls_idx = pbdf.groupby(columns).ngroup()
