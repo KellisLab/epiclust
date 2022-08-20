@@ -22,6 +22,7 @@ def load_gtf(gtf, max_score=5, min_score=1):
 
 def annotate_ranges(rng, gtf_file, col="name", promoter_upstream=2000, promoter_downstream=100):
     import gtfparse
+    import numpy as np
     from .gene_distance import df_to_pyranges
     gtf = gtfparse.read_gtf(gtf_file)
     exon_rng = df_to_pyranges(gtf.loc[gtf["feature"] == "exon",:], chrom="seqname", left="start", right="end")
