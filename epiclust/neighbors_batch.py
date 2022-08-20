@@ -34,7 +34,7 @@ def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose,
     for x, xbatch in enumerate(batches):
         xmask = np.ravel(np.where(B.values == xbatch))
         for y, ybatch in enumerate(batches):
-            metric_kwds = {"min_std": min_std, "squared_correlation": squared_correlation}
+            metric_kwds = {"min_std": min_std}
             if x <= y:
                 key = "%s %s" % (xbatch, ybatch)
                 metric_kwds["mids_x"] = si[key]["mids_x"]
@@ -47,6 +47,7 @@ def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose,
                 metric_kwds["mids_y"] = si[key]["mids_x"]
                 metric_kwds["mean_grid"] = si[key]["mean"].T
                 metric_kwds["std_grid"] = si[key]["std"].T
+            metric_kwds["squared_correlation"] = squared_correlation
             ymask = np.ravel(np.where(B.values == ybatch))
             tree = NNDescent(rep[xmask, :], metric=distance, metric_kwds=metric_kwds,
                              n_jobs=-1, n_neighbors=n_neighbors,

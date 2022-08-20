@@ -8,13 +8,13 @@ from .pcor import pcor_adjust
 
 @numba.njit
 def distance(x, y, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None, std_grid=None, squared_correlation=False):
-    """kwargs is .uns[key]"""
+    """Keywords in distance() MUST BE put into dict IN ORDER for NNDescent"""
     dim = x.shape[0]
     result = np.zeros(1)
     mean = np.zeros(1)
     std = np.zeros(1)
-    ix = np.argmin(np.abs(x[0] - mids_x))
-    iy = np.argmin(np.abs(y[0] - mids_y))
+    ix = (np.abs(x[0] - mids_x)).argmin()
+    iy = (np.abs(y[0] - mids_y)).argmin()
     mean += mean_grid[ix, iy]
     std += std_grid[ix, iy]
     for i in range(1, dim):
@@ -36,8 +36,8 @@ def correlation(X_rep, I_row, I_col, min_std=0.001, mids_x=None, mids_y=None, me
     mean = np.zeros(ncor)
     std = np.zeros(ncor)
     for i in range(ncor):
-        ix = np.argmin(np.abs(X_rep[I_row[i], 0] - mids_x))
-        iy = np.argmin(np.abs(X_rep[I_col[i], 0] - mids_y))
+        ix = (np.abs(X_rep[I_row[i], 0] - mids_x)).argmin()
+        iy = (np.abs(X_rep[I_col[i], 0] - mids_y)).argmin()
         mean[i] = mean_grid[ix, iy]
         std[i] = std_grid[ix, iy]
         for j in range(1, dim):
