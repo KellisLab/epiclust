@@ -55,6 +55,22 @@ vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 
 adata = adata[:, vidx].copy()
 ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
 #+END_SRC
+** Peak-Gene / Peak-Peak / Gene-Gene linking sample workflow
+
+#+BEGIN_SRC python
+gtf = ec.gtf.load_gtf("gencode.gtf.gz")
+dw = ec.gene_distance.distance_weight_all(peak_names_to_var(adata.var.index.values), gtf)
+dw = dw.loc[dw["gene"].isin(adata.var.index.values), :]
+links = {}
+for power in np.linspace(0, 1, 5):
+	print("Calculating power:", power)
+	ec.fit(adata, power=power, margin="log1p_total_counts", batch="feature_types",
+	       squared_correlation=True,
+               covariates=["batch", "pmi", "log1p_total_counts"]) ### technical covariates in .obs
+	links[power] = ec.linking(adata, dw["gene"].values, dw["peak"].values)
+
+### TODO combine table
+#+END_SRC
 ** single-omic workflow (DEPRECATED except for RNA-seq)
 #+BEGIN_SRC python
 import epiclust as ec
@@ -69,9 +85,10 @@ ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolut
 #+END_SRC
 * TODO wishlist
 1. use pcor for modules: see if VARM clusters by spline info
-2. .leiden() without filtering giant matrix
-3. automatic .neighbors() key_added labels based on power
-4. recipes
-5. batched gene_estimation for lower memory footprint
-6. iterative expansion to rest of features
-7. centrality-based module naming
+2. cleanup function that removes varm, uns
+3. .leiden() without filtering giant matrix
+4. automatic .neighbors() key_added labels based on power
+5. recipes
+6. batched gene_estimation for lower memory footprint
+7. iterative expansion to rest of features
+8. centrality-based module naming

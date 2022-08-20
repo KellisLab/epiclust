@@ -11,6 +11,7 @@ def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
               **extract_pcor_info(adata, key=key)}
     df = pd.DataFrame({"from": adata.var.index.get_indexer(var_from_names),
                        "to": adata.var.index.get_indexer(var_to_names)})
+    df = df.loc[(df["from"] >= 0) & (df["to"] >= 0),:]
     out = np.zeros(df.shape[0])
     X_adj = adata.varm[adata.uns[key]["rep"]]
     if "batch_key" in adata.uns[key].keys():
@@ -44,4 +45,5 @@ def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
         params["mean_grid"] = si["mean"]
         params["std_grid"] = si["std"]
         out = correlation(X_adj, I_row=df["from"].values, I_col=df["to"].values, **params)
-    return out
+    df["cor"] = out
+    return df
