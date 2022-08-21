@@ -33,6 +33,20 @@ def peak_names_to_var(peak_names, chrom="seqname",
     df.index = peak_names
     return df
 
+def shuffle_peaks(df, peak_name="peak", size=5, seed=0):
+    import numpy as np
+    import pandas as pd
+    np.random.seed(seed)
+    high = df.shape[0]
+    pf = pd.DataFrame(index=pd.unique(df[peak_name]))
+    pf["chrom"] = [x.split(":")[0] for x in pf.index.values]
+    nf = df.iloc[np.random.randint(low=0, high=high, size=int(round(high*size))), :].copy()
+    uchrom, chrom_inv = np.unique([x.split(":")[0] for x in nf[peak_name].values], return_inverse=True)
+    for i, chrom in enumerate(uchrom):
+        nonchrom = pf.loc[pf["chrom"] != chrom, :]
+        rand_idx = np.random.randint(low=0, high=max(1, nonchrom.shape[0]), size=np.sum(i == chrom_inv))
+        nf.loc[i == chrom_inv, peak_name] = nonchrom.index.values[rand_idx]
+    return nf
 
 def distance_weight_all(enh, gene, max_distance=1000 *
                         1000, chrom="seqname", gene_loc="tss"):
