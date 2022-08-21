@@ -13,6 +13,7 @@ def linking(adata, var_from_names, var_to_names,
               **extract_pcor_info(adata, key=key)}
     df = pd.DataFrame({"from": adata.var.index.get_indexer(var_from_names),
                        "to": adata.var.index.get_indexer(var_to_names)})
+    df["original_index"] = df.index.values
     df = df.loc[(df["from"] >= 0) & (df["to"] >= 0), :]
     out = np.zeros(df.shape[0])
     X_adj = adata.varm[adata.uns[key]["rep"]]
