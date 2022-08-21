@@ -16,7 +16,7 @@ def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
     X_adj = adata.varm[adata.uns[key]["rep"]]
     if "batch_key" in adata.uns[key].keys():
         df["from_batch"] = pd.Categorical(adata.var.loc[var_from_names, adata.uns[key]["batch_key"]].values)
-        df["to_batch"] = pd.Categorical(adata.var.loc[var_to_names, adata.uns[key]["batch_key"]].values)
+        df["to_batch"] = pd.Categorical(adata.var.loc[var_to_names, adata.uns[key]["batch_key"]].values)x
         ub, binv = np.unique(df.groupby(["from_batch", "to_batch"]).ngroup(), return_inverse=True)
         for i, b in enumerate(ub):
             from_batch = df["from_batch"].values[i == binv][0]
@@ -46,4 +46,6 @@ def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
         params["std_grid"] = si["std"]
         out = correlation(X_adj, I_row=df["from"].values, I_col=df["to"].values, **params)
     df["cor"] = out
+    df["from"] = pd.Categorical(adata.var.index.values[df["from"].values])
+    df["to"] = pd.Categorical(adata.var.index.values[df["to"].values])
     return df

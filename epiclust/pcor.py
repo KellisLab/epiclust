@@ -26,6 +26,8 @@ def adjust_covariates(adata, covariates=None, min_variance=1e-20, batch_size=500
                         return 0
                 else:
                         covariates = [covariates]
+        if len(covariates) == 0:
+                return 0
         br = pd.get_dummies(adata.obs[covariates]).values
         br = br[:, np.std(br, axis=0) > 0] ### remove zero variance cols e.g. pd.Categorical not present in data
         ### then Z-scale for vars. like age
