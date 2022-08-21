@@ -2,7 +2,9 @@
 from .pcor import extract_pcor_info
 from .distance import correlation
 
-def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
+
+def linking(adata, var_from_names, var_to_names,
+            key="epiclust", min_std=0.001):
     import numpy as np
     import pandas as pd
     si = adata.uns[key]["bin_info"]
@@ -11,13 +13,16 @@ def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
               **extract_pcor_info(adata, key=key)}
     df = pd.DataFrame({"from": adata.var.index.get_indexer(var_from_names),
                        "to": adata.var.index.get_indexer(var_to_names)})
-    df = df.loc[(df["from"] >= 0) & (df["to"] >= 0),:]
+    df = df.loc[(df["from"] >= 0) & (df["to"] >= 0), :]
     out = np.zeros(df.shape[0])
     X_adj = adata.varm[adata.uns[key]["rep"]]
     if "batch_key" in adata.uns[key].keys():
-        df["from_batch"] = pd.Categorical(adata.var.loc[var_from_names, adata.uns[key]["batch_key"]].values)
-        df["to_batch"] = pd.Categorical(adata.var.loc[var_to_names, adata.uns[key]["batch_key"]].values)
-        ub, binv = np.unique(df.groupby(["from_batch", "to_batch"]).ngroup(), return_inverse=True)
+        df["from_batch"] = pd.Categorical(
+            adata.var.loc[var_from_names, adata.uns[key]["batch_key"]].values)
+        df["to_batch"] = pd.Categorical(
+            adata.var.loc[var_to_names, adata.uns[key]["batch_key"]].values)
+        ub, binv = np.unique(df.groupby(
+            ["from_batch", "to_batch"]).ngroup(), return_inverse=True)
         for i, b in enumerate(ub):
             from_batch = df["from_batch"].values[i == binv][0]
             to_batch = df["to_batch"].values[i == binv][0]
@@ -44,7 +49,8 @@ def linking(adata, var_from_names, var_to_names, key="epiclust", min_std=0.001):
         params["mids_y"] = si["mids_y"]
         params["mean_grid"] = si["mean"]
         params["std_grid"] = si["std"]
-        out = correlation(X_adj, I_row=df["from"].values, I_col=df["to"].values, **params)
+        out = correlation(
+            X_adj, I_row=df["from"].values, I_col=df["to"].values, **params)
     df["cor"] = out
     df["from"] = pd.Categorical(adata.var.index.values[df["from"].values])
     df["to"] = pd.Categorical(adata.var.index.values[df["to"].values])

@@ -28,7 +28,9 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
 
-def get_sparse_matrix_from_indices_distances_umap(knn_indices, knn_dists, n_obs, n_neighbors):
+
+def get_sparse_matrix_from_indices_distances_umap(
+        knn_indices, knn_dists, n_obs, n_neighbors):
     """copy from scanpy"""
     import numpy as np
     import scipy.sparse
@@ -48,9 +50,11 @@ def get_sparse_matrix_from_indices_distances_umap(knn_indices, knn_dists, n_obs,
             cols[i * n_neighbors + j] = knn_indices[i, j]
             vals[i * n_neighbors + j] = val
 
-    result = scipy.sparse.coo_matrix((vals, (rows, cols)), shape=(n_obs, n_obs))
+    result = scipy.sparse.coo_matrix(
+        (vals, (rows, cols)), shape=(n_obs, n_obs))
     result.eliminate_zeros()
     return result.tocsr()
+
 
 def compute_connectivities_umap(knn_indices, knn_dists,
                                 n_obs, n_neighbors, set_op_mix_ratio=1.0,
@@ -66,5 +70,6 @@ def compute_connectivities_umap(knn_indices, knn_dists,
     if isinstance(connectivities, tuple):
         # In umap-learn 0.4, this returns (result, sigmas, rhos)
         connectivities = connectivities[0]
-    distances = get_sparse_matrix_from_indices_distances_umap(knn_indices, knn_dists, n_obs, n_neighbors)
+    distances = get_sparse_matrix_from_indices_distances_umap(
+        knn_indices, knn_dists, n_obs, n_neighbors)
     return distances, connectivities.tocsr()

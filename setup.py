@@ -28,5 +28,6 @@ setuptools.setup(name="epiclust",
                  ],
                  packages=setuptools.find_packages("."),
                  test_suite="test",
-                 scripts=["scripts/epiclust_aggregate.py", "scripts/epiclust_gene_estimation.py", "scripts/epiclust_pseudobulk.py"],
+                 scripts=["scripts/epiclust_aggregate.py",
+                          "scripts/epiclust_gene_estimation.py", "scripts/epiclust_pseudobulk.py"],
                  )

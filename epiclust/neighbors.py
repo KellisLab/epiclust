@@ -3,7 +3,9 @@ from .distance import distance
 from .neighbors_util import compute_connectivities_umap
 from .neighbors_batch import neighbors_batch
 
-def _neighbors_full(adata, use_rep, n_neighbors, min_std, random_state, verbose, squared_correlation=False):
+
+def _neighbors_full(adata, use_rep, n_neighbors, min_std,
+                    random_state, verbose, squared_correlation=False):
     from umap.umap_ import nearest_neighbors
     si = adata.uns[use_rep]["bin_info"]
     metric_kwds = {"min_std": min_std,
@@ -21,7 +23,9 @@ def _neighbors_full(adata, use_rep, n_neighbors, min_std, random_state, verbose,
                                                   verbose=verbose)
     return knn_indices, knn_dists
 
-def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std=0.001, random_state=0, verbose=False, set_op_mix_ratio=1.0, local_connectivity=1.0):
+
+def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std=0.001,
+              random_state=0, verbose=False, set_op_mix_ratio=1.0, local_connectivity=1.0):
     """rip off of scipy nearest neighbors, but does not transpose anndata"""
     from sklearn.utils import check_random_state
     si = adata.uns[use_rep]["bin_info"]
@@ -35,7 +39,8 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std
                                                  use_rep=use_rep,
                                                  n_neighbors=n_neighbors,
                                                  min_std=min_std,
-                                                 random_state=check_random_state(random_state),
+                                                 random_state=check_random_state(
+                                                     random_state),
                                                  verbose=verbose,
                                                  squared_correlation=adata.uns[use_rep]["squared_correlation"])
     else:
@@ -43,7 +48,8 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std
                                                  use_rep=use_rep,
                                                  n_neighbors=n_neighbors,
                                                  min_std=min_std,
-                                                 random_state=check_random_state(random_state),
+                                                 random_state=check_random_state(
+                                                     random_state),
                                                  verbose=verbose,
                                                  squared_correlation=adata.uns[use_rep]["squared_correlation"])
     distances, connectivities = compute_connectivities_umap(knn_indices, knn_dists,

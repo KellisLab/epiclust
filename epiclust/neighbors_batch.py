@@ -21,7 +21,10 @@ SOFTWARE."""
 
 from .distance import distance
 import warnings
-def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose, squared_correlation=False):
+
+
+def neighbors_batch(adata, use_rep, n_neighbors, min_std,
+                    random_state, verbose, squared_correlation=False):
     """This function is derived from get_graph in bbknn (https://github.com/Teichlab/bbknn)"""
     import numpy as np
     from pynndescent import NNDescent
@@ -53,11 +56,11 @@ def neighbors_batch(adata, use_rep, n_neighbors, min_std, random_state, verbose,
                              n_jobs=-1, n_neighbors=n_neighbors,
                              max_candidates=60,
                              random_state=random_state, verbose=verbose)
-            with warnings.catch_warnings(): #### warning for csr structure change in pynnd
+            with warnings.catch_warnings():  # warning for csr structure change in pynnd
                 warnings.simplefilter("ignore")
                 tree.prepare()
             I, D = tree.query(rep[ymask, :], k=n_neighbors)
-            col_range = np.arange(x * n_neighbors, (x+1) * n_neighbors)
+            col_range = np.arange(x * n_neighbors, (x + 1) * n_neighbors)
             knn_indices[ymask[:, None], col_range[None, :]] = xmask[I]
             knn_dists[ymask[:, None], col_range[None, :]] = D
     newidx = np.argsort(knn_dists, axis=1)

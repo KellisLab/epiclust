@@ -1,5 +1,6 @@
 
-def pseudobulk(pbdf, adata, columns=["leiden", "Sample"], obsm=None, varm=None):
+def pseudobulk(pbdf, adata, columns=[
+               "leiden", "Sample"], obsm=None, varm=None):
     """ALL pbdf columns are intersected when using .concat"""
     import numpy as np
     import pandas as pd
@@ -8,7 +9,8 @@ def pseudobulk(pbdf, adata, columns=["leiden", "Sample"], obsm=None, varm=None):
     pbdf["cls_idx"] = pbdf.groupby(columns).ngroup()
     I = np.intersect1d(pbdf.index.values, adata.obs.index.values)
     pbdf = pbdf.loc[I, :]
-    ucls, cls_idx, cls_inv = np.unique(pbdf["cls_idx"], return_index=True, return_inverse=True)
+    ucls, cls_idx, cls_inv = np.unique(
+        pbdf["cls_idx"], return_index=True, return_inverse=True)
     adata_inv = adata.obs.index.get_indexer(I)
     S = scipy.sparse.csr_matrix((np.ones(len(cls_inv)),
                                  (cls_inv, adata_inv)), dtype=int,

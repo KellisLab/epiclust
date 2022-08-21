@@ -1,6 +1,8 @@
 from .spline import build_spline, spline_grid_ordered
 
-def neighbors_dense(adata, use_rep="epiclust", spline_k=2, min_std=0.001, key_added="connectivities", n_neighbors=10, power=0.5):
+
+def neighbors_dense(adata, use_rep="epiclust", spline_k=2, min_std=0.001,
+                    key_added="connectivities", n_neighbors=10, power=0.5):
     import numpy as np
     import scipy.sparse
     mean_spl = build_spline(adata, key=use_rep, spline="mean", k=spline_k)
@@ -9,7 +11,7 @@ def neighbors_dense(adata, use_rep="epiclust", spline_k=2, min_std=0.001, key_ad
     margin = adata.varm[vrep][:, 0]
     data = adata.varm[vrep][:, 1:]
     A = data @ data.T
-    A = np.arctanh(A.clip(-1+1e-16, 1-1e-16))
+    A = np.arctanh(A.clip(-1 + 1e-16, 1 - 1e-16))
     M = spline_grid_ordered(mean_spl,
                             margin,
                             margin)
@@ -18,7 +20,7 @@ def neighbors_dense(adata, use_rep="epiclust", spline_k=2, min_std=0.001, key_ad
                             margin)
     A = (A - M) / S.clip(min_std, np.inf)
     del M, S
-    ### get cutoff based on desired n_neighbors
+    # get cutoff based on desired n_neighbors
     q1, q2 = np.triu_indices(A.shape[0], 1)
     cutoff = np.quantile(A[q1, q2], 1 - n_neighbors / A.shape[0])
     A[A < cutoff] = 0

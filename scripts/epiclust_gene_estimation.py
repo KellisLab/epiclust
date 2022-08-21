@@ -12,12 +12,12 @@ if __name__ == "__main__":
     ap.add_argument("--gtf", required=True)
     ap.add_argument("--filter-peaks", default="selected")
     ap.add_argument("--top-gene", default="closest")
-    ap.add_argument("--obsm", default="") ## for imputation if needed
-    ap.add_argument("--varm", default="") ## for imputation if needed
+    ap.add_argument("--obsm", default="")  # for imputation if needed
+    ap.add_argument("--varm", default="")  # for imputation if needed
     ap.add_argument("--max-distance", type=int, default=1000000)
     ap.add_argument("--promoter-distance", type=int, default=5000)
     ap.add_argument("--target-sum", type=int, default=10000)
-    ap.add_argument("--annotation", nargs="+") ## don't really need
+    ap.add_argument("--annotation", nargs="+")  # don't really need
     args = vars(ap.parse_args())
     if args["linking"] is not None:
         linking = pd.read_csv(args["linking"], sep="\t")

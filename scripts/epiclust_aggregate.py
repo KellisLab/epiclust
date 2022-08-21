@@ -18,13 +18,16 @@ if __name__ == "__main__":
     ap.add_argument("--min-size", type=int, default=10)
     args = vars(ap.parse_args())
     adata = sc.read(args["input"], backed="r")
-    adata = adata[:, adata.var["feature_types"].isin(args["feature_types"])].to_memory()
+    adata = adata[:, adata.var["feature_types"].isin(
+        args["feature_types"])].to_memory()
     uc, cnt = np.unique(adata.var["leiden"].values, return_counts=True)
-    adata = adata[:, adata.var["leiden"].isin(uc[cnt >= args["min_size"]])].copy()
+    adata = adata[:, adata.var["leiden"].isin(
+        uc[cnt >= args["min_size"]])].copy()
     if args["bed"]:
         V = peak_names_to_var(adata.var.index.values)
         V["leiden"] = adata.var.loc[V.index.values, "leiden"]
-        V.loc[:, ["seqname", "start", "end", "leiden"]].to_csv(args["bed"], sep="\t", index=False, header=False)
+        V.loc[:, ["seqname", "start", "end", "leiden"]].to_csv(
+            args["bed"], sep="\t", index=False, header=False)
     uc, cinv = np.unique(adata.var["leiden"].values, return_inverse=True)
     S = scipy.sparse.csr_matrix((np.ones(adata.shape[1]),
                                  (np.arange(adata.shape[1]),
@@ -44,5 +47,6 @@ if __name__ == "__main__":
     sc.pp.neighbors(cdata)
     sc.tl.leiden(cdata)
     sc.tl.umap(cdata)
-    sc.tl.rank_genes_groups(cdata, groupby=args["groupby"], method="wilcoxon", use_raw=False)
+    sc.tl.rank_genes_groups(
+        cdata, groupby=args["groupby"], method="wilcoxon", use_raw=False)
     cdata.write_h5ad(args["output"], compression="gzip")
