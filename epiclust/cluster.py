@@ -3,6 +3,8 @@ from functools import reduce
 
 def _gather_varp(adata, graph_name_list, graph="connectivities_key"):
     L = {}
+    if type(graph_name_list) == "str":
+        graph_name_list = [graph_name_list]
     for g in set(graph_name_list):
         if g not in adata.uns.keys():
             continue
@@ -85,18 +87,49 @@ def infomap(adata, graph_name_list, key_added="infomap", prefix="M", **kwargs):
     adata.var[key_added] = pd.Categorical(
         ["%s%d" % (prefix, node.module_id) for node in im.nodes])
 
-
-def leiden(adata, graph_name_list, key_added="leiden",
-           resolution=1., prefix="M", **kwargs):
+def _gather_graphs(adata, graph_name_list):
     import scanpy as sc
-    import leidenalg
-    import pandas as pd
     G = []
     for conn in _gather_varp(adata, graph_name_list).values():
         V = adata.varp[conn]
         G.append(sc._utils.get_igraph_from_adjacency(V))
     if not G:
         raise RuntimeError("No graphs present")
+    return G
+
+def combine_graphs(adata, graph_name_list):
+    import numpy as np
+    G = None
+    for conn in _gather_varp(adata, graph_name_list).values():
+        V = adata.varp[conn]
+        if G is None:
+            G = V
+        else:
+            G = sparse_maximum(G, V)
+    return G
+
+def top_features_per_group(adata, graph_name_list, groupby="leiden", n=10):
+    import numpy as np
+    import scanpy as sc
+    import pandas as pd
+    G = sc._utils.get_igraph_from_adjacency(combine_graphs(adata, graph_name_list))
+    G.vs["groupby"] = adata.var[groupby].values
+    G.vs["name"] = adata.var.index.values
+    tbl = {}
+    for cls in pd.unique(adata.var[groupby]):
+        sg = G.subgraph(G.vs.select(groupby=cls))
+        pr = sg.pagerank()
+        idx = np.argsort(pr)[::-1][range(min(n, len(pr)))]
+        print("index:", idx, len(pr))
+        tbl[cls] = np.asarray(sg.vs["name"])[idx]
+    return tbl
+
+def leiden(adata, graph_name_list, key_added="leiden",
+           resolution=1., prefix="M", **kwargs):
+    import scanpy as sc
+    import leidenalg
+    import pandas as pd
+    G = _gather_graphs(adata, graph_name_list)
     memb, _ = leidenalg.find_partition_multiplex(G, leidenalg.RBConfigurationVertexPartition,
                                                  resolution_parameter=resolution, **kwargs)
     adata.var[key_added] = pd.Categorical(
