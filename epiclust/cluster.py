@@ -120,7 +120,6 @@ def top_features_per_group(adata, graph_name_list, groupby="leiden", n=10):
         sg = G.subgraph(G.vs.select(groupby=cls))
         pr = sg.pagerank()
         idx = np.argsort(pr)[::-1][range(min(n, len(pr)))]
-        print("index:", idx, len(pr))
         tbl[cls] = np.asarray(sg.vs["name"])[idx]
     return tbl
 

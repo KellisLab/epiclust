@@ -35,6 +35,8 @@ if __name__ == "__main__":
             print(S, "is not a valid key-value pair")
             sys.exit(1)
     df = pd.read_csv(args["table"], sep="\t", index_col=0)
+    for col in np.intersect1d(df.columns, args["columns"]):
+        df[col] = pd.Categorical(df[col]) ## make sure categorical vars.
     L = {}
     for k in data_keys:
         print("Pseudobulking", k)
