@@ -19,9 +19,9 @@ def linking(adata, var_from_names, var_to_names,
     X_adj = adata.varm[adata.uns[key]["rep"]]
     if "batch_key" in adata.uns[key].keys():
         df["from_batch"] = pd.Categorical(
-            adata.var.loc[var_from_names, adata.uns[key]["batch_key"]].values)
+            adata.var[adata.uns[key]["batch_key"]].values[df["from"].values])
         df["to_batch"] = pd.Categorical(
-            adata.var.loc[var_to_names, adata.uns[key]["batch_key"]].values)
+            adata.var[adata.uns[key]["batch_key"]].values[df["to"].values])
         ub, binv = np.unique(df.groupby(
             ["from_batch", "to_batch"]).ngroup(), return_inverse=True)
         for i, b in enumerate(ub):
