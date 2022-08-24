@@ -53,7 +53,7 @@ def distance_weight_all(enh, gene, max_distance=1000 *
     """enh from peak_names_to_var, gene from load_gtf().loc[genes,:]"""
     import numpy as np
     import pandas as pd
-    er = df_to_pyranges(enh, name="peak", pos="loc", chrom=chrom)
+    er = df_to_pyranges(enh, name="peak", left="start", right="end", chrom=chrom)
     xr = df_to_pyranges(gene, name="gene", pos=gene_loc,
                         margin=max_distance, chrom=chrom)
     xdf = xr.join(er).df.loc[:, ["gene", "peak"]]
