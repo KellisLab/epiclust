@@ -46,12 +46,13 @@ def adjust_covariates(adata, covariates=None,
     RR = br.T.dot(br)  # corr coef
     PR = np.zeros((adata.shape[1], br.shape[1]))
     br = br - br.mean(0)[None, :]
+    U, s, VT = extract_pca(adata, n_pcs=adata.uns[key]["n_pcs"])
+    power = adata.uns[key]["power"]
+    Us = U.dot(scipy.sparse.diags(s**power).astype(np.float64))
+    del U, s
     for left in np.arange(0, adata.shape[1], batch_size):
         right = min(left + batch_size, adata.shape[1])
-        if scipy.sparse.issparse(adata.X):
-            X = np.asarray(adata.X[:, left:right].todense(), dtype=np.float64)
-        else:
-            X = np.asarray(adata.X[:, left:right], dtype=np.float64)
+        X = np.asarray(Us @ VT[:, left:right], dtype=np.float64)
         X = X - X.mean(0)[None, :]
         X = X / np.linalg.norm(X, ord=2, axis=0)[None, :].clip(1e-50, np.inf)
         PR[left:right, :] = X.T.dot(br)
