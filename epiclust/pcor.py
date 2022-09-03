@@ -1,7 +1,7 @@
 
 import numba
 import numpy as np
-
+from .extraction import extract_pca
 
 @numba.njit
 def pcor_adjust(cor, row, col, varm, inv):
@@ -19,12 +19,13 @@ def pcor_adjust(cor, row, col, varm, inv):
 
 
 def adjust_covariates(adata, covariates=None,
-                      min_variance=1e-20, batch_size=5000, key="epiclust"):
+                      min_variance=1e-20, batch_size=1000, key="epiclust"):
     import numpy as np
     import pandas as pd
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
     import scipy.sparse
+    from tqdm.auto import tqdm
     if not isinstance(covariates, list):
         if covariates is None:
             return 0
@@ -48,9 +49,9 @@ def adjust_covariates(adata, covariates=None,
     br = br - br.mean(0)[None, :]
     U, s, VT = extract_pca(adata, n_pcs=adata.uns[key]["n_pcs"])
     power = adata.uns[key]["power"]
-    Us = U.dot(scipy.sparse.diags(s**power).astype(np.float64))
+    Us = U.dot(np.diag(s**power)).astype(np.float64)
     del U, s
-    for left in np.arange(0, adata.shape[1], batch_size):
+    for left in tqdm(np.arange(0, adata.shape[1], batch_size)):
         right = min(left + batch_size, adata.shape[1])
         X = np.asarray(Us @ VT[:, left:right], dtype=np.float64)
         X = X - X.mean(0)[None, :]
