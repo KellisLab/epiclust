@@ -1,4 +1,4 @@
-from .spline import build_spline, spline_grid_ordered
+from .fit import build_spline, spline_grid_ordered
 
 
 def neighbors_dense(adata, use_rep="epiclust", spline_k=2, min_std=0.001,

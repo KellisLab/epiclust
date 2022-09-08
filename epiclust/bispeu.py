@@ -25,7 +25,7 @@ def get_f2py_function_address(capsule):
 
 
 @intrinsic
-def val_to_ptr(typingctx, data):
+def val_to_ptr(typingctx, data=None):
     def impl(context, builder, signature, args):
         ptr = cgutils.alloca_once_value(builder, args[0])
         return ptr

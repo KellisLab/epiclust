@@ -30,4 +30,4 @@ jobs:
         conda install pylint
     - name: Analyze the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        pylint --rcfile=.pylintrc --fail-under 6 $(git ls-files '*.py')

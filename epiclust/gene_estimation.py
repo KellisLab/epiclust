@@ -61,6 +61,7 @@ def estimate_genes_linking(adata, gtf, linking=None, obsm="NMF_H", varm="NMF_W",
 
 def annotate(adata, tsv_list):
     import numpy as np
+    import pandas as pd
     L = []
     for tsv in tsv_list:
         L.append(pd.read_csv(tsv, sep="\t", index_col=0))

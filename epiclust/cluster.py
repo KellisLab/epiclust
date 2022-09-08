@@ -137,7 +137,7 @@ def leiden(adata, graph_name_list, key_added="leiden",
 
 def embedding(adata, graph_name, prefix="X_", **kwargs):
     from sklearn.manifold import spectral_embedding
-    conn = _gather_varp([graph_name]).values()[0]
+    conn = _gather_varp(adata, [graph_name]).values()[0]
     se = spectral_embedding(adata.varp[conn], **kwargs)
     adata.varm["%s%s" % (prefix, graph_name)] = se
 
