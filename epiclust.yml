@@ -17,13 +17,14 @@ dependencies:
   - python-igraph
   - matplotlib
   - pyranges
+  - pytabix
   - seaborn
   - tqdm
   - scikit-learn
   - leidenalg
   - cython
   - umap-learn
-  - infomap>=2.5.0
+  - python-infomap>=2.5.0
   - pynndescent>=0.5.7
   - gtfparse
   - fa2
