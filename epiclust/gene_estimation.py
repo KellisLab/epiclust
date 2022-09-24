@@ -49,7 +49,8 @@ def estimate_genes_linking(adata, gtf, linking=None, obsm="NMF_H", varm="NMF_W",
     del DWM
     flag = np.ravel(X.sum(0)) > 0
     print("Creating AnnData object")
-    gdata = anndata.AnnData(X[:, flag], obs=adata.obs,
+    gdata = anndata.AnnData(X[:, flag], obs=adata.obs, obsp=adata.obsp, obsm=adata.obsm,
+                            uns={k: adata.uns[k] for k in ["neighbors"] if k in adata.uns.keys()},
                             var=gtf.loc[flag, :], dtype=np.float32)
     del X
     gdata.var.rename({"gene_id": "gene_ids"}, inplace=True, axis=1)
