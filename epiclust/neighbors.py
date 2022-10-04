@@ -2,16 +2,17 @@
 from .distance import distance
 from .neighbors_util import compute_connectivities_umap
 from .neighbors_batch import neighbors_batch
-
+from .pcor import extract_pcor_info
 
 def _neighbors_full(adata, use_rep, n_neighbors, min_std,
-                    random_state, verbose, squared_correlation=False):
+                    random_state, verbose, squared_correlation=False, pcor_inv=None):
     from umap.umap_ import nearest_neighbors
     si = adata.uns[use_rep]["bin_info"]
     metric_kwds = {"min_std": min_std,
                    "mids_x": si["mids_x"], "mids_y": si["mids_y"],
                    "mean_grid": si["mean"], "std_grid": si["std"],
-                   "squared_correlation": squared_correlation}
+                   "squared_correlation": squared_correlation,
+                   "pcor_inv": pcor_inv}
     rep = adata.uns[use_rep]["rep"]
     X = adata.varm[rep]
     knn_indices, knn_dists, _ = nearest_neighbors(X,
@@ -34,6 +35,7 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std
               "metric": "custom",
               "module": use_rep,
               "use_rep": adata.uns[use_rep]["rep"]}
+    pcor_params = extract_pcor_info(adata, key=use_rep)
     if "batch_key" in adata.uns[use_rep].keys():
         knn_indices, knn_dists = neighbors_batch(adata,
                                                  use_rep=use_rep,
@@ -42,7 +44,8 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std
                                                  random_state=check_random_state(
                                                      random_state),
                                                  verbose=verbose,
-                                                 squared_correlation=adata.uns[use_rep]["squared_correlation"])
+                                                 squared_correlation=adata.uns[use_rep]["squared_correlation"],
+                                                 pcor_inv=pcor_params.get("pcor_inv"))
     else:
         knn_indices, knn_dists = _neighbors_full(adata,
                                                  use_rep=use_rep,
@@ -51,7 +54,8 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std
                                                  random_state=check_random_state(
                                                      random_state),
                                                  verbose=verbose,
-                                                 squared_correlation=adata.uns[use_rep]["squared_correlation"])
+                                                 squared_correlation=adata.uns[use_rep]["squared_correlation"],
+                                                 pcor_inv=pcor_params.get("pcor_inv"))
     distances, connectivities = compute_connectivities_umap(knn_indices, knn_dists,
                                                             knn_indices.shape[0],
                                                             knn_indices.shape[1],
@@ -59,12 +63,9 @@ def neighbors(adata, n_neighbors=15, key_added=None, use_rep="epiclust", min_std
                                                             local_connectivity=local_connectivity)
     params["n_neighbors"] = knn_indices.shape[1]
     if key_added is None:
-        key_added = "neighbors"
-        conns_key = "connectivities"
-        dists_key = "distances"
-    else:
-        conns_key = key_added + "_connectivities"
-        dists_key = key_added + "_distances"
+        key_added = "pow_%.2f" % adata.uns[use_rep]["power"]
+    conns_key = key_added + "_connectivities"
+    dists_key = key_added + "_distances"
     adata.uns[key_added] = {}
     neighbors_dict = adata.uns[key_added]
     neighbors_dict["connectivities_key"] = conns_key

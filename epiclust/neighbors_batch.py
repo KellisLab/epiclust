@@ -24,7 +24,7 @@ import warnings
 
 
 def neighbors_batch(adata, use_rep, n_neighbors, min_std,
-                    random_state, verbose, squared_correlation=False):
+                    random_state, verbose, squared_correlation=False, pcor_inv=None):
     """This function is derived from get_graph in bbknn (https://github.com/Teichlab/bbknn)"""
     import numpy as np
     from pynndescent import NNDescent
@@ -51,6 +51,7 @@ def neighbors_batch(adata, use_rep, n_neighbors, min_std,
                 metric_kwds["mean_grid"] = si[key]["mean"].T
                 metric_kwds["std_grid"] = si[key]["std"].T
             metric_kwds["squared_correlation"] = squared_correlation
+            metric_kwds["pcor_inv"] = pcor_inv
             ymask = np.ravel(np.where(B.values == ybatch))
             tree = NNDescent(rep[xmask, :], metric=distance, metric_kwds=metric_kwds,
                              n_jobs=-1, n_neighbors=n_neighbors,

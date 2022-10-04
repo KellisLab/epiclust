@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 
 
 def calc_perbin_stats(rep, bin_assign_row, bin_assign_col, where_row=None, where_col=None,
-                      margin_of_error=0.05, z=2, n_bins_sample=1, blur=1, pcor_varm=None, pcor_inv=None, squared_correlation=False):
+                      margin_of_error=0.05, z=2, n_bins_sample=1, blur=1, n_pcs=-1, pcor_inv=None, squared_correlation=False):
     r_uniq = np.unique(bin_assign_row)
     c_uniq = np.unique(bin_assign_col)
     # sample size = ss_numer / (1 + ss_numer/n)
@@ -34,7 +34,8 @@ def calc_perbin_stats(rep, bin_assign_row, bin_assign_col, where_row=None, where
             col_indices = np.random.choice(col_indices, min(
                 len(col_indices), int(ss)), replace=False)
             ret = calc_stats_per_bin(rep, row_indices, col_indices, out_row=i, out_col=j,
-                                     pcor_inv=pcor_inv, pcor_varm=pcor_varm, squared_correlation=squared_correlation)
+                                     pcor_inv=pcor_inv, n_pcs=n_pcs,
+                                     squared_correlation=squared_correlation)
             out.append(ret)
     for x in out:
         counts[x["row"], x["col"]] = x["counts"]

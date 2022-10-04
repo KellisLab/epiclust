@@ -4,15 +4,15 @@ from .pcor import pcor_adjust
 
 
 def calc_stats_per_bin(X_adj, row_indices, col_indices, out_row, out_col,
-                       eps=1e-16, pcor_varm=None, pcor_inv=None, squared_correlation=False):
-    cor = X_adj[row_indices, :] @ X_adj[col_indices, :].T
+                       eps=1e-16, n_pcs=-1, pcor_inv=None, squared_correlation=False):
+    cor = X_adj[row_indices, :n_pcs] @ X_adj[col_indices, :n_pcs].T
     RI, CI = np.where(~np.equal.outer(row_indices, col_indices))
     data = cor[RI, CI].astype(np.float64)
-    if pcor_varm is not None and pcor_inv is not None:
+    if pcor_inv is not None:
+        ninv = pcor_inv.shape[0]
         data = pcor_adjust(cor=data,
-                           row=row_indices[RI],
-                           col=col_indices[CI],
-                           varm=pcor_varm,
+                           row_varm=X_adj[row_indices[RI], -ninv:].astype(np.float64),
+                           col_varm=X_adj[col_indices[CI], -ninv:].astype(np.float64),
                            inv=pcor_inv)
     if squared_correlation:
         data *= data

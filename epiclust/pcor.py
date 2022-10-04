@@ -4,12 +4,12 @@ import numpy as np
 from .extraction import extract_pca
 
 @numba.njit
-def pcor_adjust(cor, row, col, varm, inv):
+def pcor_adjust(cor, row_varm, col_varm, inv):
     res = np.empty(cor.shape[0], dtype=cor.dtype)
     for i in range(len(cor)):
-        sub = varm[row[i], :].dot(inv).dot(varm[col[i], :])
-        denom_L = varm[row[i], :].dot(inv).dot(varm[row[i], :].T)
-        denom_R = varm[col[i], :].dot(inv).dot(varm[col[i], :].T)
+        sub = row_varm[i, :].dot(inv).dot(col_varm[i, :])
+        denom_L = row_varm[i, :].dot(inv).dot(row_varm[i, :].T)
+        denom_R = col_varm[i, :].dot(inv).dot(col_varm[i, :].T)
         denom_square = (1 - denom_L) * (1 - denom_R)
         if denom_square < 1e-20:
             denom_square = 1e-20
@@ -57,18 +57,22 @@ def adjust_covariates(adata, covariates=None,
         X = X - X.mean(0)[None, :]
         X = X / np.linalg.norm(X, ord=2, axis=0)[None, :].clip(1e-50, np.inf)
         PR[left:right, :] = X.T.dot(br)
-    prkey = "X_%s_adjust" % key
+    ### Now to append to rep
+    vkey = adata.uns[key]["rep"]
     if len(np.shape(PR)) == 1:
-        adata.varm[prkey] = PR[:, None]
+        adata.varm[vkey] = np.hstack((adata.varm[vkey], PR[:, None]))
     else:
-        adata.varm[prkey] = PR
+        adata.varm[vkey] = np.hstack((adata.varm[vkey], PR))
     adata.uns[key]["adjust"] = {
-        "varm": prkey, "inv": np.linalg.pinv(RR), "covariates": covariates}
+        "inv": np.linalg.pinv(RR),
+        "covariates": covariates
+    }
     return adata
 
 
 def extract_pcor_info(adata, key="epiclust"):
     if (key not in adata.uns) or ("adjust" not in adata.uns[key]):
         return {}
-    return {"pcor_inv": adata.uns[key]["adjust"]["inv"],
-            "pcor_varm": adata.varm[adata.uns[key]["adjust"]["varm"]]}
+    return {
+        "pcor_inv": adata.uns[key]["adjust"]["inv"]
+    }

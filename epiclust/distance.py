@@ -9,9 +9,11 @@ from .pcor import pcor_adjust
 
 @numba.njit
 def distance(x, y, min_std=0.001, mids_x=None, mids_y=None,
-             mean_grid=None, std_grid=None, squared_correlation=False):
+             mean_grid=None, std_grid=None, squared_correlation=False, pcor_inv=None):
     """Keywords in distance() MUST BE put into dict IN ORDER for NNDescent"""
     dim = x.shape[0]
+    if pcor_inv is not None:
+        dim = dim - pcor_inv.shape[0]
     result = np.zeros(1)
     mean = np.zeros(1)
     std = np.zeros(1)
@@ -23,6 +25,13 @@ def distance(x, y, min_std=0.001, mids_x=None, mids_y=None,
         dot = x[i] * y[i]
         result += dot
     std[std < min_std] = min_std
+    # apply pcor if applicable
+    if pcor_inv is not None:
+        npc = pcor_inv.shape[0]
+        result = pcor_adjust(result,
+                             row_varm=x[-npc:].reshape(-1, 1).astype(np.float64),
+                             col_varm=y[-npc:].reshape(-1, 1).astype(np.float64),
+                             inv=pcor_inv)
     if squared_correlation:
         result *= result
     result[result < -1 + 1e-16] = -1 + 1e-16

@@ -35,10 +35,11 @@ def fit(adata, power=0, batch=None, covariates=None,
     assert 0 == extract_rep(adata, power=power, margin=margin,
                             key_added=key, n_pcs=n_pcs, zero_center=zero_center)
     adata.uns[key]["squared_correlation"] = squared_correlation
+    adjust_covariates(adata, covariates, key=key)
     X_adj = adata.varm[adata.uns[key]["rep"]]
     margin = X_adj[:, 0]
     X_adj = X_adj[:, 1:]
-    adjust_covariates(adata, covariates, key=key)
+    n_pcs = adata.uns[key]["n_pcs"]
     if batch is not None and batch in adata.var.columns:
         ub, binv = np.unique(adata.var[batch].values, return_inverse=True)
         tbl = {}
@@ -75,6 +76,7 @@ def fit(adata, power=0, batch=None, covariates=None,
                                                z=z,
                                                margin_of_error=margin_of_error,
                                                n_bins_sample=n_bins_sample,
+                                               n_pcs=n_pcs,
                                                blur=blur,
                                                squared_correlation=squared_correlation,
                                                **extract_pcor_info(adata, key=key))
