@@ -22,7 +22,6 @@ SOFTWARE."""
 from .distance import distance
 import warnings
 
-
 def neighbors_batch(adata, use_rep, n_neighbors, min_std,
                     random_state, verbose, squared_correlation=False, pcor_inv=None):
     """This function is derived from get_graph in bbknn (https://github.com/Teichlab/bbknn)"""

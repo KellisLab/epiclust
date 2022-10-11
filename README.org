@@ -1,5 +1,5 @@
 * EpiClust
-scmodule code [[https://github.com/KellisLab/scmodule][adapted]] for ATAC-seq, multiomics, and peak-gene linking
+Single cell module detection for ATAC-seq, multiomics, and peak-gene linking
 
 ** To install
 You may need to create a CONDA environment as specified in [[epiclust.yml]].
@@ -49,7 +49,7 @@ import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
 	ec.fit(adata, power=power, margin="log1p_total_counts", batch="feature_types")
-	ec.neighbors(adata, key_added="pow_%.2f" % power, n_neighbors=25) ### takes forever but worth it
+	ec.neighbors(adata, n_neighbors=25) ### takes forever but worth it
 
 vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
 adata = adata[:, vidx].copy()
@@ -84,11 +84,12 @@ adata = adata[:, vidx].copy()
 ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500)
 #+END_SRC
 * TODO wishlist
-1. use pcor for modules: see if VARM clusters by spline info
-2. cleanup function that removes varm, uns
+1. scalability to laptops / on-disk format
+2. translate to muon (multi-omic) and anndata (single-omic) framework
 3. .leiden() without filtering giant matrix
-4. automatic .neighbors() key_added labels based on power
-5. recipes
+4. epiclust structure that preserves multiple .fit
+5. cleanup function that removes varm, uns ???
 6. batched gene_estimation for lower memory footprint
 7. iterative expansion to rest of features
 8. centrality-based module naming
+9. pygreat integration?

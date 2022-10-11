@@ -29,8 +29,8 @@ def distance(x, y, min_std=0.001, mids_x=None, mids_y=None,
     if pcor_inv is not None:
         npc = pcor_inv.shape[0]
         result = pcor_adjust(result,
-                             row_varm=x[-npc:].reshape(-1, 1).astype(np.float64),
-                             col_varm=y[-npc:].reshape(-1, 1).astype(np.float64),
+                             row_varm=x[-npc:].reshape(1, -1).astype(np.float64),
+                             col_varm=y[-npc:].reshape(1, -1).astype(np.float64),
                              inv=pcor_inv)
     if squared_correlation:
         result *= result
