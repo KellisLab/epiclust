@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import setuptools
+from glob import glob
+
 setuptools.setup(name="epiclust",
-                 version="0.2.0",
+                 version="0.2.1",
                  author="Benjamin James",
                  author_email="benjames@mit.edu",
                  url="https://github.com/KellisLab/epiclust",
@@ -29,8 +31,5 @@ setuptools.setup(name="epiclust",
                  ],
                  packages=setuptools.find_packages("."),
                  test_suite="test",
-                 scripts=["scripts/epiclust_aggregate.py",
-                          "scripts/epiclust_gene_estimation.py",
-                          "scripts/epiclust_pseudobulk.py",
-                          "scripts/epiclust_annotate.py"],
+                 scripts=glob("scripts/*.py"),
                  )
