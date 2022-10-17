@@ -53,6 +53,7 @@ for power in np.linspace(0, 1, 5):
 
 ec.filter_var(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
 ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500, min_comm_size=3)
+ec.infomap(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], min_comm_size=3)
 #+END_SRC
 ** Peak-Gene / Peak-Peak / Gene-Gene linking sample workflow
 
@@ -80,6 +81,7 @@ for power in np.linspace(0, 1, 5):
 
 ec.filter_var(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
 ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500, min_comm_size=3)
+ec.infomap(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], min_comm_size=3)
 #+END_SRC
 * TODO wishlist
 1. scalability to laptops / on-disk format

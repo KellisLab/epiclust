@@ -27,6 +27,8 @@ def process(h5ad, output, power, covariates=[], batch=None, margin="log1p_total_
         ec.leiden(adata, ["pow_%.2f" % x for x in power],
                   resolution=resolution,
                   min_comm_size=min_comm_size)
+    print("Running InfoMap")
+    ec.infomap(adata, ["pow_%.2f" % x for x in power], min_comm_size=min_comm_size)
     print("Writing data")
     adata.write_h5ad(output, compression="gzip")
 
