@@ -73,7 +73,7 @@ def _gather_graphs(adata, graph_name_list, split_batch=True, use_rep="epiclust",
             G.append(S.dot(V.dot(S)))
     if not G:
         raise RuntimeError("No graphs present")
-    return G
+    return [g for g in G if len(g.data) > 0]
 
 def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="epiclust", key_added="selected", split_batch=True):
     from functools import reduce
@@ -85,11 +85,11 @@ def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="epiclust", key_add
         I = _filter_var(g, z=z, pct=pct)
         adata.var.loc[adata.var.index.values[I], key_added] = True
 
-def infomap(adata, graph_name_list, key_added="infomap", split_batch=True, use_rep="epiclust", prefix="M", selected="selected", min_comm_size=2, **kwargs):
+def infomap(adata, graph_name_list, key_added="G_infomap", split_batch=True, use_rep="epiclust", selected="selected", min_comm_size=2, min_centrality=0, **kwargs):
     from infomap import Infomap
     import pandas as pd
-    from tqdm.auto import tqdm
     import numpy as np
+    import scipy.sparse
     im = Infomap(**kwargs)
     GV = _gather_graphs(adata, graph_name_list,
                         split_batch=split_batch,
@@ -97,20 +97,28 @@ def infomap(adata, graph_name_list, key_added="infomap", split_batch=True, use_r
                         selected=selected)
     for layer, G in enumerate(GV):
         G = G.tocoo()
-        for i in tqdm(np.arange(len(G.data))):
+        for i in range(len(G.data)):
             im.add_multilayer_intra_link(layer_id=layer,
                                          source_node_id=int(G.row[i]),
                                          target_node_id=int(G.col[i]),
                                          weight=G.data[i])
     im.run()
-    clust = np.ones(adata.shape[1], dtype=int) * -1
-    for node in im.tree:
-        if node.is_leaf:
-            clust[node.node_id] = node.module_id
-    uclust, cinv, ccnt = np.unique(clust, return_counts=True, return_inverse=True)
-    bad_clust = np.ravel(np.where(ccnt < min_comm_size))
-    clust[np.isin(cinv, bad_clust)] = -1
-    adata.var[key_added] = pd.Categorical(["%s%d" % (prefix, x) if x >= 0 else None for x in clust ])
+    assign = []
+    ### Get all module assignments per node
+    for node in im.get_tree(depth_level=1, states=True):
+        if node.is_leaf and node.modular_centrality > min_centrality:
+            assign.append((node.module_id, node.node_id, node.modular_centrality))
+    df = pd.DataFrame(assign, columns=["module_id", "node_id", "modular_centrality"])
+    um, minv, mcnt = np.unique(df["module_id"].values, return_inverse=True, return_counts=True)
+    good = np.ravel(np.where(mcnt >= min_comm_size))
+    df = df.iloc[np.isin(minv, good), :]
+    _, df["module_id"] = np.unique(df["module_id"].values, return_inverse=True)
+    adata.varm[key_added] = scipy.sparse.csr_matrix(
+        (df["modular_centrality"].values,
+         (df["node_id"].values,
+          df["module_id"].values)),
+        shape=(adata.shape[1], len(pd.unique(df["module_id"]))),
+        dtype=np.float32)
 
 def combine_graphs(adata, graph_name_list, selected="selected", use_rep="epiclust"):
     import numpy as np
