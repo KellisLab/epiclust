@@ -4,7 +4,7 @@ import setuptools
 from glob import glob
 
 setuptools.setup(name="epiclust",
-                 version="0.2.1",
+                 version="0.3.0",
                  author="Benjamin James",
                  author_email="benjames@mit.edu",
                  url="https://github.com/KellisLab/epiclust",

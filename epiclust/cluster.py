@@ -1,5 +1,3 @@
-from functools import reduce
-
 
 def _gather_varp(adata, graph_name_list, graph="connectivities_key"):
     L = {}
@@ -16,97 +14,87 @@ def _gather_varp(adata, graph_name_list, graph="connectivities_key"):
         L[g] = conn
     return L
 
-
 def sparse_maximum(A, B):
     import numpy as np
     diff = A - B
     diff.data = np.where(diff.data < 0, 1, 0)
     return A - A.multiply(diff) + B.multiply(diff)
 
-
-def _filter_var(adata, conn, z=2, pct=0.0, row_indices=None, col_indices=None):
+def _filter_var(G, z=2, pct=0.0):
     """Recall that distances are computed as np.exp(-z) to turn correlations into distances
 """
     import numpy as np
     import scipy.stats
     percentile = scipy.stats.norm.cdf(z)
     percentile = min(percentile, 1 - percentile)
-    X = adata.varp[conn]
-    if row_indices is not None:
-        X = X[row_indices, :]
-    if col_indices is not None:
-        X = X[:, col_indices]
-    max_distance = np.quantile(X.data, percentile)
-    nn = (X > 0).sum(1)
-    M = nn - (X > max_distance).sum(1)
+    max_distance = np.quantile(G.data, percentile)
+    nn = (G > 0).sum(1)
+    M = nn - (G > max_distance).sum(1)
     # what percentage of nearest neighbors for each .var are close enough?
-    I, _ = np.where(M > (nn.max() * pct))
-    if row_indices is not None:
-        return row_indices[I]
-    else:
-        return I
+    row, _ = np.where(M > (nn.max() * pct))
+    return row
 
-
-def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="epiclust"):
-    """TODO: detect batches"""
-    from functools import reduce
+def _gather_batch_indices(adata, use_rep="epiclust", selected="selected"):
+    """ minus 1 for nonselected indices"""
     import numpy as np
-    G = _gather_varp(adata, graph_name_list, graph="distances_key")
-    I = []
-    if "batch_key" in adata.uns[use_rep].keys():
-        ub, binv = np.unique(
-            adata.var[adata.uns[use_rep]["batch_key"]], return_inverse=True)
-        for i, _ in enumerate(ub):
-            R = np.ravel(np.where(binv == i))
-            for j, _ in enumerate(ub):
-                C = np.ravel(np.where(binv == j))
-                I += [_filter_var(adata, conn, z, pct,
-                                  row_indices=R,
-                                  col_indices=C) for conn in G.values()]
-        # add row-indices and col_indices for each batch pair and add to I list
-    else:
-        I = [_filter_var(adata, conn, z, pct) for conn in G.values()]
-    return adata.var.index.values[reduce(np.union1d, I)]
-
-
-def _gather_batch_indices(adata, use_rep="epiclust"):
     if "batch_key" in adata.uns[use_rep].keys():
         ub, binv = np.unique(
             adata.var[adata.uns[use_rep]["batch_key"]], return_inverse=True)
     else:
         binv = np.zeros(adata.shape[1], dtype=int)
         ub = ["all"]
+    if selected is not None:
+        if selected in adata.var.columns and adata.var[selected].dtype == np.dtype('bool'):
+            idx = np.ravel(np.where(adata.var[selected]))
+            binv[idx] = -1
+        else:
+            print("Warning: No boolean column named \"%s\" in .var" % selected)
     return ub, binv
 
-def _gather_graphs(adata, graph_name_list, split_batch=True, use_rep="epiclust"):
+def _gather_graphs(adata, graph_name_list, split_batch=True, use_rep="epiclust", selected="selected", graph="connectivities_key"):
     import scanpy as sc
     import scipy.sparse
     import numpy as np
     G = []
-    ubatch, batches = _gather_batch_indices(adata, use_rep=use_rep)
-    for conn in _gather_varp(adata, graph_name_list).values():
+    ubatch, batches = _gather_batch_indices(adata, use_rep=use_rep, selected=selected)
+    for conn in _gather_varp(adata, graph_name_list, graph=graph).values():
         V = adata.varp[conn]
         if split_batch and len(ubatch) > 1:
             for i, _ in enumerate(ubatch):
+                ### Enumerating over ubatch removes -1s from batches since starts at 0
                 S = scipy.sparse.diags(batches == i, dtype=int)
                 VS = V.dot(S)
                 for j, _ in enumerate(ubatch):
                     S = scipy.sparse.diags(batches == j, dtype=int)
-                    VS = S.dot(VS)
-                    G.append(VS)
+                    G.append(S.dot(VS))
         else:
-            G.append(V)
+            ### Use "batches" to remove non-selected indices
+            S = scipy.sparse.diags(batches >= 0, dtype=int)
+            G.append(S.dot(V.dot(S)))
     if not G:
         raise RuntimeError("No graphs present")
-    return [g for g in G if len(g.data) > 0]
+    return G
 
-def infomap(adata, graph_name_list, key_added="infomap", split_batch=True, use_rep="epiclust", prefix="M", **kwargs):
+def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="epiclust", key_added="selected", split_batch=True):
+    from functools import reduce
+    import numpy as np
+    G = _gather_graphs(adata, graph_name_list, graph="distances_key",
+                       use_rep=use_rep, split_batch=split_batch, selected=None)
+    adata.var[key_added] = False
+    for g in G:
+        I = _filter_var(g, z=z, pct=pct)
+        adata.var.loc[adata.var.index.values[I], key_added] = True
+
+def infomap(adata, graph_name_list, key_added="infomap", split_batch=True, use_rep="epiclust", prefix="M", selected="selected", min_comm_size=2, **kwargs):
     from infomap import Infomap
     import pandas as pd
     from tqdm.auto import tqdm
     import numpy as np
     im = Infomap(**kwargs)
-    GV = _gather_graphs(adata, graph_name_list, split_batch=split_batch, use_rep=use_rep)
+    GV = _gather_graphs(adata, graph_name_list,
+                        split_batch=split_batch,
+                        use_rep=use_rep,
+                        selected=selected)
     for layer, G in enumerate(GV):
         G = G.tocoo()
         for i in tqdm(np.arange(len(G.data))):
@@ -119,13 +107,17 @@ def infomap(adata, graph_name_list, key_added="infomap", split_batch=True, use_r
     for node in im.tree:
         if node.is_leaf:
             clust[node.node_id] = node.module_id
-    adata.var[key_added] = pd.Categorical(["M%d" % x if x >= 0 else None for x in clust ])
+    uclust, cinv, ccnt = np.unique(clust, return_counts=True, return_inverse=True)
+    bad_clust = np.ravel(np.where(ccnt < min_comm_size))
+    clust[np.isin(cinv, bad_clust)] = -1
+    adata.var[key_added] = pd.Categorical(["%s%d" % (prefix, x) if x >= 0 else None for x in clust ])
 
-def combine_graphs(adata, graph_name_list):
+def combine_graphs(adata, graph_name_list, selected="selected", use_rep="epiclust"):
     import numpy as np
     G = None
-    for conn in _gather_varp(adata, graph_name_list).values():
-        V = adata.varp[conn]
+    for V in _gather_graphs(adata, graph_name_list,
+                            split_batch=False, use_rep=use_rep,
+                            selected=selected):
         if G is None:
             G = V
         else:
@@ -148,36 +140,21 @@ def top_features_per_group(adata, graph_name_list, groupby="leiden", n=10):
     return tbl
 
 def leiden(adata, graph_name_list, key_added="leiden", split_batch=True,
-           use_rep="epiclust",
+           use_rep="epiclust", selected="selected", min_comm_size=2,
            resolution=1., prefix="M", **kwargs):
     import scanpy as sc
     import leidenalg
     import pandas as pd
-    G = [sc._utils.get_igraph_from_adjacency(g) for g in _gather_graphs(adata, graph_name_list, split_batch=split_batch, use_rep=use_rep)]
-    memb, _ = leidenalg.find_partition_multiplex(G, leidenalg.RBConfigurationVertexPartition,
-                                                 resolution_parameter=resolution, **kwargs)
-    adata.var[key_added] = pd.Categorical(
-        ["%s%d" % (prefix, x + 1) for x in memb])
-
-
-def embedding(adata, graph_name, prefix="X_", **kwargs):
-    from sklearn.manifold import spectral_embedding
-    conn = _gather_varp(adata, [graph_name]).values()[0]
-    se = spectral_embedding(adata.varp[conn], **kwargs)
-    adata.varm["%s%s" % (prefix, graph_name)] = se
-
-
-def select_clusters(adata, clust_name, graph_name,
-                    key_added="selected", power=-0.5):
-    from sklearn.metrics import silhouette_score
     import numpy as np
-    import scipy.sparse
-    conn = list(_gather_varp(adata, [graph_name]).values())[0]
-    uc, cinv, cnt = np.unique(
-        adata.var[clust_name], return_inverse=True, return_counts=True)
-    S = scipy.sparse.csr_matrix((cnt[cinv]**power,
-                                 (np.arange(len(cinv)),
-                                  cinv)))
-    CS = adata.varp[conn].dot(S)
-    top = np.ravel(CS[np.arange(len(cinv)), cinv])
-    bot = np.ravel(CS.sum(1))
+    G = [sc._utils.get_igraph_from_adjacency(g) for g in _gather_graphs(adata,
+                                                                        graph_name_list,
+                                                                        split_batch=split_batch,
+                                                                        use_rep=use_rep,
+                                                                        selected=selected)]
+    clust, _ = leidenalg.find_partition_multiplex(G, leidenalg.RBConfigurationVertexPartition,
+                                                  resolution_parameter=resolution, **kwargs)
+    clust = np.asarray(clust)
+    uclust, cinv, ccnt = np.unique(clust, return_counts=True, return_inverse=True)
+    bad_clust = np.ravel(np.where(ccnt < min_comm_size))
+    clust[np.isin(cinv, bad_clust)] = -1
+    adata.var[key_added] = pd.Categorical(["%s%d" % (prefix, x + 1) if x >= 0 else None for x in clust ])
