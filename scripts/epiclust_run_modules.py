@@ -3,17 +3,26 @@
 import os
 import argparse
 
-def process(h5ad, output, power, covariates=[], batch=None, margin="log1p_total_counts", n_neighbors=25):
+def process(h5ad, output, power, covariates=[], batch=None, margin="log1p_total_counts", n_neighbors=5, resolution=2, max_comm_size=None):
     import scanpy as sc
     import epiclust as ec
     adata = sc.read(h5ad, backed="r")
     for p in power:
-        print("Fitting data, power = ", p)
+        print("Fitting data, power=%.2f" % p)
         ec.fit(adata, power=p,
                batch=batch, covariates=covariates,
                margin=margin)
-        print("Finding neighbors, power =", p)
+        print("Finding %d nearest neighbors, power=%.2f" % (n_neighbors, p))
         ec.neighbors(adata, n_neighbors=n_neighbors)
+    if max_comm_size is not None and max_comm_size > 0:
+        print("Finding clusters with resolution=%.2f and max_comm_size=%d" % (resolution, max_comm_size))
+        ec.leiden(adata, ["pow_%.2f" % x for x in power],
+                  resolution=resolution,
+                  max_comm_size=max_comm_size)
+    else:
+        print("Finding clusters with resolution=%.2f" % resolution)
+        ec.leiden(adata, ["pow_%.2f" % x for x in power],
+                  resolution=resolution)
     print("Writing data")
     adata.write_h5ad(output, compression="gzip")
 
@@ -25,6 +34,8 @@ if __name__ == "__main__":
     ap.add_argument("--covariates", nargs="+")
     ap.add_argument("--batch")
     ap.add_argument("--margin", default="log1p_total_counts")
-    ap.add_argument("--n-neighbors", type=int, default=25)
+    ap.add_argument("--n-neighbors", type=int, default=5)
+    ap.add_argument("-r", "--resolution", type=float, default=2.)
+    ap.add_argument("--max-comm-size", type=int, default=None)
     args = vars(ap.parse_args())
     process(**args)

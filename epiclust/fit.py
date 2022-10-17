@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import warnings
 import numpy as np
 import scipy.sparse
 import scipy.interpolate
@@ -70,6 +71,8 @@ def fit(adata, power=0, batch=None, covariates=None,
         adata.uns[key]["batches"] = ub
         adata.uns[key]["batch_key"] = batch
     else:
+        if batch is not None:
+            warnings.warn("Batch \"%s\" not present in .var, using single-omic style" % batch)
         adata.uns[key]["bin_info"] = _fit_bins(X_adj=X_adj,
                                                margin=margin,
                                                nbins=n_bins,

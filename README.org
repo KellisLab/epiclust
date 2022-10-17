@@ -49,7 +49,7 @@ import epiclust as ec
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
 	ec.fit(adata, power=power, margin="log1p_total_counts", batch="feature_types")
-	ec.neighbors(adata, n_neighbors=25) ### takes forever but worth it
+	ec.neighbors(adata, n_neighbors=5)
 
 vidx = ec.filter_varp(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)])
 adata = adata[:, vidx].copy()
