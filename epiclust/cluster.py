@@ -69,33 +69,57 @@ def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="epiclust"):
     return adata.var.index.values[reduce(np.union1d, I)]
 
 
-def infomap(adata, graph_name_list, key_added="infomap", prefix="M", **kwargs):
+def _gather_batch_indices(adata, use_rep="epiclust"):
+    if "batch_key" in adata.uns[use_rep].keys():
+        ub, binv = np.unique(
+            adata.var[adata.uns[use_rep]["batch_key"]], return_inverse=True)
+    else:
+        binv = np.zeros(adata.shape[1], dtype=int)
+        ub = ["all"]
+    return ub, binv
+
+def _gather_graphs(adata, graph_name_list, split_batch=True, use_rep="epiclust"):
+    import scanpy as sc
+    import scipy.sparse
+    import numpy as np
+    G = []
+    ubatch, batches = _gather_batch_indices(adata, use_rep=use_rep)
+    for conn in _gather_varp(adata, graph_name_list).values():
+        V = adata.varp[conn]
+        if split_batch and len(ubatch) > 1:
+            for i, _ in enumerate(ubatch):
+                S = scipy.sparse.diags(batches == i, dtype=int)
+                VS = V.dot(S)
+                for j, _ in enumerate(ubatch):
+                    S = scipy.sparse.diags(batches == j, dtype=int)
+                    VS = S.dot(VS)
+                    G.append(VS)
+        else:
+            G.append(V)
+    if not G:
+        raise RuntimeError("No graphs present")
+    return [g for g in G if len(g.data) > 0]
+
+def infomap(adata, graph_name_list, key_added="infomap", split_batch=True, use_rep="epiclust", prefix="M", **kwargs):
     from infomap import Infomap
     import pandas as pd
+    from tqdm.auto import tqdm
+    import numpy as np
     im = Infomap(**kwargs)
-    im.add_nodes(range(adata.shape[1]))
-    for layer, conn in enumerate(
-            _gather_varp(adata, graph_name_list).values()):
-        G = adata.varp[conn].tocoo()
-        for i in range(len(G.data)):
+    GV = _gather_graphs(adata, graph_name_list, split_batch=split_batch, use_rep=use_rep)
+    for layer, G in enumerate(GV):
+        G = G.tocoo()
+        for i in tqdm(np.arange(len(G.data))):
             im.add_multilayer_intra_link(layer_id=layer,
                                          source_node_id=int(G.row[i]),
                                          target_node_id=int(G.col[i]),
                                          weight=G.data[i])
-        del G
     im.run()
-    adata.var[key_added] = pd.Categorical(
-        ["%s%d" % (prefix, node.module_id) for node in im.nodes])
-
-def _gather_graphs(adata, graph_name_list):
-    import scanpy as sc
-    G = []
-    for conn in _gather_varp(adata, graph_name_list).values():
-        V = adata.varp[conn]
-        G.append(sc._utils.get_igraph_from_adjacency(V))
-    if not G:
-        raise RuntimeError("No graphs present")
-    return G
+    clust = np.ones(adata.shape[1], dtype=int) * -1
+    for node in im.tree:
+        if node.is_leaf:
+            clust[node.node_id] = node.module_id
+    adata.var[key_added] = pd.Categorical(["M%d" % x if x >= 0 else None for x in clust ])
 
 def combine_graphs(adata, graph_name_list):
     import numpy as np
@@ -123,12 +147,13 @@ def top_features_per_group(adata, graph_name_list, groupby="leiden", n=10):
         tbl[cls] = np.asarray(sg.vs["name"])[idx]
     return tbl
 
-def leiden(adata, graph_name_list, key_added="leiden",
+def leiden(adata, graph_name_list, key_added="leiden", split_batch=True,
+           use_rep="epiclust",
            resolution=1., prefix="M", **kwargs):
     import scanpy as sc
     import leidenalg
     import pandas as pd
-    G = _gather_graphs(adata, graph_name_list)
+    G = [sc._utils.get_igraph_from_adjacency(g) for g in _gather_graphs(adata, graph_name_list, split_batch=split_batch, use_rep=use_rep)]
     memb, _ = leidenalg.find_partition_multiplex(G, leidenalg.RBConfigurationVertexPartition,
                                                  resolution_parameter=resolution, **kwargs)
     adata.var[key_added] = pd.Categorical(
