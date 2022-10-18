@@ -6,6 +6,7 @@ import argparse
 def process(h5ad, output, power, covariates=[], batch=None, margin="log1p_total_counts", n_neighbors=5, resolution=2, max_comm_size=None, min_comm_size=2):
     import scanpy as sc
     import epiclust as ec
+    import pandas as pd
     adata = sc.read(h5ad, backed="r")
     for p in power:
         print("Fitting data, power=%.2f" % p)
