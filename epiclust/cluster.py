@@ -45,7 +45,7 @@ def _gather_batch_indices(adata, use_rep="epiclust", selected="selected"):
         ub = ["all"]
     if selected is not None:
         if selected in adata.var.columns and adata.var[selected].dtype == np.dtype('bool'):
-            idx = np.ravel(np.where(adata.var[selected]))
+            idx = np.ravel(np.where(~adata.var[selected]))
             binv[idx] = -1
         else:
             print("Warning: No boolean column named \"%s\" in .var" % selected)
