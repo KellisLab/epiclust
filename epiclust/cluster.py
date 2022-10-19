@@ -75,15 +75,18 @@ def _gather_graphs(adata, graph_name_list, split_batch=True, use_rep="epiclust",
         raise RuntimeError("No graphs present")
     return [g for g in G if len(g.data) > 0]
 
-def filter_var(adata, graph_name_list, z=2, pct=0.0, use_rep="epiclust", key_added="selected", split_batch=True):
+def filter_var(adata, graph_name_list, z=2, pct=0.0, min_cells=3, use_rep="epiclust", key_added="selected", split_batch=True):
     from functools import reduce
     import numpy as np
     G = _gather_graphs(adata, graph_name_list, graph="distances_key",
                        use_rep=use_rep, split_batch=split_batch, selected=None)
     adata.var[key_added] = False
+    if min_cells is not None and "n_cells_by_counts" not in adata.var.columns:
+        raise RuntimeError("Number of cells is not present in .var")
     for g in G:
         I = _filter_var(g, z=z, pct=pct)
         adata.var.loc[adata.var.index.values[I], key_added] = True
+    adata.var[key_added] &= adata.var["n_cells_by_counts"].values >= min_cells
 
 def infomap(adata, graph_name_list, key_added="G_infomap", split_batch=True, use_rep="epiclust", selected="selected", min_comm_size=2, min_centrality=0, **kwargs):
     from infomap import Infomap
