@@ -150,6 +150,11 @@ def top_features_per_group(adata, graph_name_list, groupby="leiden", n=10):
         tbl[cls] = np.asarray(sg.vs["name"])[idx]
     return tbl
 
+def umap(adata, graph_name_list, key_added="X_umap", use_rep="epiclust", selected="selected", **kwargs):
+    from .neighbors_util import gather_umap
+    G = combine_graphs(adata, graph_name_list, selected=selected, use_rep=use_rep)
+    adata.varm[key_added] = gather_umap(adata.varm["PCs"], G, **kwargs)
+
 def leiden(adata, graph_name_list, key_added="leiden", split_batch=True,
            use_rep="epiclust", selected="selected", min_comm_size=2,
            resolution=1., prefix="M", **kwargs):

@@ -73,3 +73,31 @@ def compute_connectivities_umap(knn_indices, knn_dists,
     distances = get_sparse_matrix_from_indices_distances_umap(
         knn_indices, knn_dists, n_obs, n_neighbors)
     return distances, connectivities.tocsr()
+
+def gather_umap(X, graph, n_components=2, a=None, b=None, spread=1., min_dist=0.5, maxiter=None, alpha=1., gamma=1., negative_sample_rate=5., init_pos="spectral", random_state=0, verbose=False):
+    from umap.umap_ import simplicial_set_embedding
+    from umap.umap_ import find_ab_params
+    from sklearn.utils import check_random_state
+    if a is None or b is None:
+        a, b = find_ab_params(spread, min_dist)
+    default_epochs = 500 if graph.shape[0] <= 10000 else 200
+    n_epochs = default_epochs if maxiter is None else maxiter
+    X_umap, _ = simplicial_set_embedding(
+        X,
+        graph.tocoo(),
+        n_components,
+        alpha,
+        a,
+        b,
+        gamma,
+        negative_sample_rate,
+        n_epochs,
+        init_pos,
+        check_random_state(random_state),
+        "euclidean",
+        {},
+        densmap=False,
+        densmap_kwds={},
+        output_dens=False,
+        verbose=verbose)
+    return X_umap

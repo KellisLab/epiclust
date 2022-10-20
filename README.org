@@ -46,14 +46,19 @@ sc.pp.pca(adata, n_comps=100)
 Note that the n_neighbors parameter can be changed, as n_neighbors is the per-batch number of neighbors
 #+BEGIN_SRC python
 import epiclust as ec
+import numpy as np
+import seaborn as sns
 for power in np.linspace(0, 1, 5):
 	print("Calculating power:", power)
 	ec.fit(adata, power=power, margin="log1p_total_counts", batch="feature_types")
 	ec.neighbors(adata, n_neighbors=5)
 
-ec.filter_var(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], min_cells=3)
-ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolution=1., max_comm_size=2500, min_comm_size=3)
-ec.infomap(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], min_comm_size=3)
+graphs = ["pow_%.2f" % power for power in np.linspace(0, 1, 5)]
+ec.filter_var(adata, graphs, min_cells=3)
+ec.leiden(adata, graphs, resolution=1., max_comm_size=2500, min_comm_size=3)
+ec.infomap(adata, graphs, min_comm_size=3)
+ec.umap(adata, graphs)
+ax = sns.scatterplot(x=adata.varm["X_umap"][:, 0], y=adata.varm["X_umap"][:, 1], hue=adata.var["leiden"])
 #+END_SRC
 ** Peak-Gene / Peak-Peak / Gene-Gene linking sample workflow
 

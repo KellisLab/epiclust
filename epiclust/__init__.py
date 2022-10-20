@@ -1,7 +1,7 @@
 #from .perbin import calc_perbin_stats
 from .fit import fit
 from .neighbors import neighbors
-from .cluster import filter_var, leiden, infomap
+from .cluster import filter_var, leiden, infomap, umap, combine_graphs
 from .gene_estimation import estimate_genes_linking
 from .linking import linking
 
