@@ -64,6 +64,8 @@ def neighbors(adata, n_neighbors=5, key_added=None, use_rep="epiclust", min_std=
     params["n_neighbors"] = knn_indices.shape[1]
     if key_added is None:
         key_added = "pow_%.2f" % adata.uns[use_rep]["power"]
+    if "graphs" in adata.uns[use_rep].keys():
+        adata.uns[use_rep]["graphs"] = sorted(list(set([key_added] + adata.uns[use_rep]["graphs"])))
     conns_key = key_added + "_connectivities"
     dists_key = key_added + "_distances"
     adata.uns[key_added] = {}

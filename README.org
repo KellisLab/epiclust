@@ -89,10 +89,10 @@ ec.leiden(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], resolut
 ec.infomap(adata, ["pow_%.2f" % power for power in np.linspace(0, 1, 5)], min_comm_size=3)
 #+END_SRC
 * TODO wishlist
-1. scalability to laptops / on-disk format
-2. translate to muon (multi-omic) and anndata (single-omic) framework
-3. .leiden() without filtering giant matrix
-4. epiclust structure that preserves multiple .fit
+1. typing
+2. documentation
+3. translate to muon (multi-omic) and anndata (single-omic) framework
+4. .umap() without filtering giant matrix
 5. cleanup function that removes varm, uns ???
 6. batched gene_estimation for lower memory footprint
 7. iterative expansion to rest of features

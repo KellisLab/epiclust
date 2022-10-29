@@ -42,9 +42,14 @@ def extract_rep(adata, power=0.0, margin="log1p_total_counts",
     M = (M - np.min(M)) / (np.max(M) - np.min(M))  # min-max scale
     adata.varm[rep] = np.hstack((2 * M - 1,  # -1 to 1 scale
                                  X_adj)).astype(np.float32)
+    if key_added in adata.uns.keys() and "graphs" in adata.uns[key_added].keys():
+        graphs = adata.uns[key_added]["graphs"]
+    else:
+        graphs = []
     adata.uns[key_added] = {"rep": rep,
                             "margin": margin,
                             "power": power,
+                            "graphs": graphs,
                             "n_pcs": len(s),
                             "zero_center": zero_center}
     return 0
