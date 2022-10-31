@@ -1,5 +1,5 @@
 
-from .distance import distance
+from .distance import distance, distance_dense
 from .neighbors_util import compute_connectivities_umap
 from .neighbors_batch import neighbors_batch
 from .pcor import extract_pcor_info
@@ -15,13 +15,16 @@ def _neighbors_full(adata, use_rep, n_neighbors, min_std,
                    "pcor_inv": pcor_inv}
     rep = adata.uns[use_rep]["rep"]
     X = adata.varm[rep]
-    knn_indices, knn_dists, _ = nearest_neighbors(X,
-                                                  n_neighbors=n_neighbors,
-                                                  metric=distance,
-                                                  metric_kwds=metric_kwds,
-                                                  angular=True,
-                                                  random_state=random_state,
-                                                  verbose=verbose)
+    if 10 * n_neighbors > adata.shape[1]:
+        knn_indices, knn_dists = distance_dense(X, n_neighbors=n_neighbors, **metric_kwds)
+    else:
+        knn_indices, knn_dists, _ = nearest_neighbors(X,
+                                                      n_neighbors=n_neighbors,
+                                                      metric=distance,
+                                                      metric_kwds=metric_kwds,
+                                                      angular=True,
+                                                      random_state=random_state,
+                                                      verbose=verbose)
     return knn_indices, knn_dists
 
 

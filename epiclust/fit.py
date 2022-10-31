@@ -29,8 +29,10 @@ def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
     return cps
 
 
-def fit(adata, power=0, batch=None, covariates=None,
-        margin="log1p_total_counts", n_bins=50, key="epiclust",
+def fit(adata,
+        power : float = 0,
+        batch=None, covariates=None,
+        margin : str = "log1p_total_counts", n_bins=50, key="epiclust",
         n_pcs=None, zero_center=True, squared_correlation=False,
         z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
     assert 0 == extract_rep(adata, power=power, margin=margin,
