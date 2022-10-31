@@ -69,7 +69,7 @@ def distance_dense(X_epiclust, n_neighbors=-1, min_std=0.001, mids_x=None, mids_
         n_neighbors = indices.shape[1]
     if n_neighbors < indices.shape[1]:
         indices = indices[:, np.arange(n_neighbors)]
-    return indices, result[np.arange(result.shape[0])[:, None], indices].astype(np.float32)
+    return indices, result[np.arange(result.shape[0])[:, None], indices].astype(np.float32, order="C")
 
 @numba.njit
 def correlation(X_rep, I_row, I_col, min_std=0.001, mids_x=None, mids_y=None, mean_grid=None,
