@@ -3,7 +3,7 @@
 import os
 import argparse
 
-def process(h5ad, output, power, covariates=[], batch=None, margin="log1p_total_counts", n_neighbors=5, resolution=2, max_comm_size=None, min_comm_size=2, min_cells=3, infomap=False):
+def process(h5ad, output, power, covariates=[], batch=None, margin="log1p_total_counts", n_neighbors=5, resolution=2, max_comm_size=None, min_comm_size=2, min_cells=3, infomap=False, umap=True):
     import scanpy as sc
     import epiclust as ec
     import pandas as pd
@@ -33,8 +33,9 @@ def process(h5ad, output, power, covariates=[], batch=None, margin="log1p_total_
         ec.infomap(adata, ["pow_%.2f" % x for x in power],
                    min_comm_size=min_comm_size,
                    preferred_number_of_modules=len(pd.unique(adata.var["leiden"])))
-    print("Computing UMAP")
-    ec.umap(adata, ["pow_%.2f" % x for x in power])
+    if umap:
+        print("Computing UMAP")
+        ec.umap(adata, ["pow_%.2f" % x for x in power])
     print("Writing data")
     adata.write_h5ad(output, compression="gzip")
 
@@ -53,6 +54,8 @@ if __name__ == "__main__":
     ap.add_argument("--min-comm-size", type=int, default=3)
     ap.add_argument("--run-infomap", dest="infomap", action="store_true")
     ap.add_argument("--no-run-infomap", dest="infomap", action="store_false")
-    ap.set_defaults(infomap=False)
+    ap.add_argument("--run-umap", dest="umap", action="store_true")
+    ap.add_argument("--no-run-umap", dest="umap", action="store_false")
+    ap.set_defaults(infomap=False, umap=True)
     args = vars(ap.parse_args())
     process(**args)
