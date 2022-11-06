@@ -35,6 +35,7 @@ def fit(adata,
         margin : str = "log1p_total_counts", n_bins=50, key="epiclust",
         n_pcs=None, zero_center=True, squared_correlation=False,
         z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
+    """ z: will calculate sample size based on z and margin_of_error. if Z is large then more samples will be needed"""
     assert 0 == extract_rep(adata, power=power, margin=margin,
                             key_added=key, n_pcs=n_pcs, zero_center=zero_center)
     adata.uns[key]["squared_correlation"] = squared_correlation
@@ -43,7 +44,7 @@ def fit(adata,
     margin = X_adj[:, 0]
     X_adj = X_adj[:, 1:]
     n_pcs = adata.uns[key]["n_pcs"]
-    if batch is not None and batch in adata.var.columns:
+    if batch is not None and batch in adata.var.columns and len(pd.unique(adata.var[batch])) > 1:
         ub, binv = np.unique(adata.var[batch].values, return_inverse=True)
         tbl = {}
         for i, j in combinations_with_replacement(np.arange(len(ub)), 2):
