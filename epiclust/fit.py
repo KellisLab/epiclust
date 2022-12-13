@@ -32,10 +32,13 @@ def _fit_bins(X_adj, margin, nbins, where_x=None, where_y=None, **kwargs):
 def fit(adata,
         power : float = 0,
         batch=None, covariates=None,
+        use_rep=None,
         margin : str = "log1p_total_counts", n_bins=50, key="epiclust",
         n_pcs=None, zero_center=True, squared_correlation=False,
         z=2, margin_of_error=0.05, n_bins_sample=1, blur=1):
     """ z: will calculate sample size based on z and margin_of_error. if Z is large then more samples will be needed"""
+    import pandas as pd
+    import numpy as np
     assert 0 == extract_rep(adata, power=power, margin=margin,
                             key_added=key, n_pcs=n_pcs, zero_center=zero_center)
     adata.uns[key]["squared_correlation"] = squared_correlation

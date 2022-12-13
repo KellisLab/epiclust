@@ -20,19 +20,25 @@ def extract_pca(adata, n_pcs=None, extract_u=True):
 
 
 def extract_rep(adata, power=0.0, margin="log1p_total_counts",
+                use_rep=None,
                 key_added="epiclust", n_pcs=None, zero_center=True):
     import numpy as np
     if margin not in adata.var.columns:
         print("Margin", margin, "not in adata.var")
         return -1
-    if "PCs" not in adata.varm or "X_pca" not in adata.obsm or "pca" not in adata.uns:
-        print("Must run sc.pp.pca first")
-        return -1
-    _, s, VT = extract_pca(adata, n_pcs=n_pcs, extract_u=False)
-    s = s.astype(np.float64) ** power
-    s = s / np.linalg.norm(s, ord=2).clip(1e-100, np.inf)
-    X_adj = VT.T.astype(np.float64) @ np.diag(s)
-    del VT
+    if use_rep is None:
+        if "PCs" not in adata.varm or "X_pca" not in adata.obsm or "pca" not in adata.uns:
+            print("Must run sc.pp.pca first")
+            return -1
+        _, s, VT = extract_pca(adata, n_pcs=n_pcs, extract_u=False)
+        s = s.astype(np.float64) ** power
+        s = s / np.linalg.norm(s, ord=2).clip(1e-100, np.inf)
+        X_adj = VT.T.astype(np.float64) @ np.diag(s)
+        del VT
+    else:
+        X_adj = adata.varm[use_rep].astype(np.float64)
+    if n_pcs is not None:
+        X_adj = X_adj[:, np.arange(n_pcs)]
     if zero_center:
         X_adj = X_adj - X_adj.mean(1)[:, None]
     norm = np.linalg.norm(X_adj, axis=1, ord=2)[:, None]

@@ -64,7 +64,7 @@ ax = sns.scatterplot(x=adata.varm["X_umap"][:, 0], y=adata.varm["X_umap"][:, 1],
 
 #+BEGIN_SRC python
 gtf = ec.gtf.load_gtf("gencode.gtf.gz")
-dw = ec.gene_distance.distance_weight_all(peak_names_to_var(adata.var.index.values), gtf)
+dw = ec.gene_distance.distance_weight_all(ec.gene_distance.peak_names_to_var(adata.var.index.values), gtf)
 dw = dw.loc[dw["gene"].isin(adata.var.index.values), :]
 links = {}
 for power in np.linspace(0, 1, 5):
