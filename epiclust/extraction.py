@@ -18,6 +18,22 @@ def extract_pca(adata, n_pcs=None, extract_u=True):
         U = None
     return U, s, VT
 
+def extract_lsi(adata, n_pcs=None, extract_u=True):
+    import numpy as np
+    Us = adata.obsm["X_lsi"]
+    s = adata.uns["lsi"]["stdev"].astype(np.float64)
+    s *= np.sqrt(adata.X.shape[0] - 1)
+    if extract_u:
+        U = Us @ np.diag(1 / s)
+    VT = adata.varm["LSI"].T
+    if n_pcs is not None and n_pcs <= len(s):
+        if extract_u:
+            U = U[:, range(n_pcs)]
+        s = s[range(n_pcs)]
+        VT = VT[range(n_pcs), :]
+    if not extract_u:
+        U = None
+    return U, s, VT
 
 def extract_rep(adata, power=0.0, margin="log1p_total_counts",
                 use_rep=None,
@@ -27,14 +43,19 @@ def extract_rep(adata, power=0.0, margin="log1p_total_counts",
         print("Margin", margin, "not in adata.var")
         return -1
     if use_rep is None:
-        if "PCs" not in adata.varm or "X_pca" not in adata.obsm or "pca" not in adata.uns:
-            print("Must run sc.pp.pca first")
-            return -1
-        _, s, VT = extract_pca(adata, n_pcs=n_pcs, extract_u=False)
-        s = s.astype(np.float64) ** power
-        s = s / np.linalg.norm(s, ord=2).clip(1e-100, np.inf)
-        X_adj = VT.T.astype(np.float64) @ np.diag(s)
-        del VT
+        if "PCs" in adata.varm and "X_pca" in adata.obsm and "pca" in adata.uns:
+            _, s, VT = extract_pca(adata, n_pcs=n_pcs, extract_u=False)
+            s = s.astype(np.float64) ** power
+            s = s / np.linalg.norm(s, ord=2).clip(1e-100, np.inf)
+            X_adj = VT.T.astype(np.float64) @ np.diag(s)
+            del VT
+        elif "LSI" in adata.varm and "X_lsi" in adata.obsm and "lsi" in adata.uns:
+            _, s, VT = extract_lsi(adata, n_pcs=n_pcs, extract_u=False)
+            s = s.astype(np.float64) ** power
+            s = s / np.linalg.norm(s, ord=2).clip(1e-100, np.inf)
+            X_adj = VT.T.astype(np.float64) @ np.diag(s)
+            del VT
+
     else:
         X_adj = adata.varm[use_rep].astype(np.float64)
     if n_pcs is not None:
