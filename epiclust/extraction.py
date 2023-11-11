@@ -22,7 +22,7 @@ def extract_lsi(adata, n_pcs=None, extract_u=True):
     import numpy as np
     Us = adata.obsm["X_lsi"]
     s = adata.uns["lsi"]["stdev"].astype(np.float64)
-    s *= np.sqrt(adata.X.shape[0] - 1)
+    s *= np.sqrt(adata.shape[0] - 1)
     if extract_u:
         U = Us @ np.diag(1 / s)
     VT = adata.varm["LSI"].T
